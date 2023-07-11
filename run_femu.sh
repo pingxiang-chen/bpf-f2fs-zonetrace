@@ -20,7 +20,7 @@ then
     cp ../femu-scripts/femu-copy-scripts.sh .
     ./femu-copy-scripts.sh .
     # update OSIMGF
-    sed -i 's/u20s.qcow2/ubuntu2204.qcow2/g' run-zns.sh
+    sed -i 's/u20s.qcow2/debian.qcow2/g' run-zns.sh
     sudo ./pkgdep.sh
     ./femu-compile.sh
 fi
