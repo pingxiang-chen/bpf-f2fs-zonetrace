@@ -2,6 +2,11 @@
 
 set -e
 
+# FEMU Image directory
+IMAGE_DIR=$HOME/image
+# Virtual machine disk image
+IMAGE_FILE=debian.qcow2
+
 ROOT=$(pwd)
 
 if [ ! -d ./femu/build-femu ]
@@ -19,11 +24,13 @@ then
     cd build-femu
     cp ../femu-scripts/femu-copy-scripts.sh .
     ./femu-copy-scripts.sh .
-    # update OSIMGF
-    sed -i 's/u20s.qcow2/debian.qcow2/g' run-zns.sh
     sudo ./pkgdep.sh
     ./femu-compile.sh
 fi
+
+# update Image Path
+sed -i "s|IMGDIR=.*|IMGDIR=$IMAGE_DIR|g" run-zns.sh
+sed -i "s|OSIMGF=.*|OSIMGF=\$IMGDIR/$IMAGE_FILE|g" run-zns.sh
 
 echo $ROOT
 cd $ROOT/femu/build-femu
