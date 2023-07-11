@@ -10,7 +10,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
-#include "f2fs.skel.h"
+#include "f2fszonetracer.skel.h"
 
 int nr_zone;
 int nr_op_zone;
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     struct ring_buffer *rb = NULL;
-    struct f2fs_bpf *skel;
+    struct f2fszonetracer_bpf *skel;
     int err;
 
     nr_zone = atoi(argv[1]);
@@ -90,14 +90,14 @@ int main(int argc, char **argv) {
     }
 
     /* Open load and verify BPF application */
-    skel = f2fs_bpf__open_and_load();
+    skel = f2fszonetracer_bpf__open_and_load();
     if (!skel) {
         fprintf(stderr, "Failed to open BPF skeleton\n");
         return 1;
     }
 
     /* Attach tracepoint handler */
-    err = f2fs_bpf__attach(skel);
+    err = f2fszonetracer_bpf__attach(skel);
     if (err) {
         fprintf(stderr, "Failed to attach BPF skeleton\n");
         goto cleanup;
@@ -126,6 +126,6 @@ int main(int argc, char **argv) {
 
 cleanup:
     ring_buffer__free(rb);
-    f2fs_bpf__destroy(skel);
+    f2fszonetracer_bpf__destroy(skel);
     return -err;
 }
