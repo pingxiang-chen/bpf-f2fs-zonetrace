@@ -31,7 +31,7 @@ func main() {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
 	}
 
-	port := 8080
+	port := 9090
 	ctx := newSignalContext()
 	m := znsmemory.New(ctx, *zoneInfo)
 	m.StartReceiveTrace(ctx, r)
