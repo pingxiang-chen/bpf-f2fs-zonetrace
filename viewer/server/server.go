@@ -175,7 +175,7 @@ func installGracefulShutdown(ctx context.Context, server *http.Server) {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		fmt.Println("Shutdown server...")
+		fmt.Println("\nShutdown server...")
 		_ = server.Shutdown(shutdownCtx)
 	}()
 }
