@@ -56,7 +56,7 @@ int handle_event(void *ctx, void *data, size_t data_sz) {
     unsigned int seg_per_zone = zone_size / segment_size;
     unsigned int cur_zone = e->segno / seg_per_zone;
     
-    buf[0] = e->segno % 1024;
+    buf[0] = e->segno % seg_per_zone;
     buf[1] = cur_zone;
     buf[2] = __builtin_ctz(e->seg_type);
 
