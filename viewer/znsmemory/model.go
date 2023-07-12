@@ -5,25 +5,25 @@ const SegmentSize = 512
 type SegmentType int
 
 const (
-	UnknownSegment SegmentType = iota - 1
+	UnknownSegment SegmentType = iota - 1 // gray
 
 	// HotDataSegment is type for frequently accessed data segments
-	HotDataSegment
+	HotDataSegment // red
 
 	// WarmDataSegment is type for commonly accessed data segments
-	WarmDataSegment
+	WarmDataSegment // yellow
 
 	// ColdDataSegment is type for infrequently accessed data segments
-	ColdDataSegment
+	ColdDataSegment // blue
 
 	// HotNodeSegment is type for frequently accessed node segments
-	HotNodeSegment
+	HotNodeSegment // pink
 
 	// WarmNodeSegment is type for commonly accessed node segments
-	WarmNodeSegment
+	WarmNodeSegment // orange
 
 	// ColdNodeSegment is type for infrequently accessed node segments
-	ColdNodeSegment
+	ColdNodeSegment // sky blue
 )
 
 func (t SegmentType) IsValid() bool {
@@ -37,8 +37,9 @@ type Segment struct {
 }
 
 type SegmentId struct {
-	ZoneNo    int
-	SegmentNo int
+	ZoneNo      int
+	SegmentNo   int
+	SegmentType SegmentType
 }
 
 type SitEntryUpdate struct {

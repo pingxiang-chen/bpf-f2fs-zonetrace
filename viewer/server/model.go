@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 type ZoneInfoResponse struct {
@@ -24,10 +25,11 @@ func (z *ZoneInfoResponse) Serialize() []byte {
 }
 
 type SegmentResponse struct {
-	Time      int64 `json:"time"`
-	ZoneNo    int   `json:"zone_no"`
-	SegmentNo int   `json:"segment_no"`
-	Map       []int `json:"map"`
+	Time        int64 `json:"time"`
+	ZoneNo      int   `json:"zone_no"`
+	SegmentNo   int   `json:"segment_no"`
+	SegmentType int   `json:"segment_type"`
+	Map         []int `json:"map"`
 }
 
 func (s *SegmentResponse) Serialize() []byte {
@@ -36,4 +38,9 @@ func (s *SegmentResponse) Serialize() []byte {
 		panic(fmt.Errorf("error serializing segment response: %v", err))
 	}
 	return buf.Bytes()
+}
+
+type zoneNoSegmentTypePair struct {
+	ZoneNo      int
+	SegmentType znsmemory.SegmentType
 }

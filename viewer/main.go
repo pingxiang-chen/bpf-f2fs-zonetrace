@@ -25,7 +25,7 @@ func newSignalContext() context.Context {
 }
 
 func main() {
-	r := bufio.NewReaderSize(os.Stdin, 40960)
+	r := bufio.NewReaderSize(os.Stdin, 4096)
 	zoneInfo, err := znsmemory.ReadZoneInfo(r)
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))

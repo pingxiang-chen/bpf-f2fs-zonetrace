@@ -231,13 +231,17 @@
 
         const lastUpdateZone = {};
 
-        async function blinkZone(zoneNo) {
+        async function blinkZone(zoneNo, segmentType) {
+            console.log(segmentType)
+            const colors = ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'];
+            let color = colors[segmentType] || 'gray';
+
             lastUpdateZone[zoneNo] = Date.now();
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
                 })
-            cell.style("fill", "yellow")
+            cell.style("fill", color)
             setTimeout(() => {
                 if (Date.now() - lastUpdateZone[zoneNo] >= 1000) {
                     cell.style("fill", "black")
@@ -267,10 +271,12 @@
                     const parsed = JSON.parse(chunk);
                     const t = parsed.time;
                     const i = parsed.segment_no;
+                    const segType = parsed.segment_type;
+                    console.log(parsed)
                     let row = parsed.map;
                     const zoneNo = parsed.zone_no;
                     if (currentZoneId !== zoneNo) {
-                        blinkZone(zoneNo);
+                        blinkZone(zoneNo, segType);
                         continue;
                     }
                     if (!row) {

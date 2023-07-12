@@ -70,7 +70,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// send all segments
 	for i, segment := range zone.Segments {
-		data := ToSegmentResponse(zone.ZoneNo, i, segment.ValidMap)
+		data := ToSegmentResponse(zone.ZoneNo, i, znsmemory.UnknownSegment, segment.ValidMap)
 		if ok = sendSegment(w, flusher, data); !ok {
 			return
 		}
@@ -102,8 +102,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	// subscribe zone updates
 	sub := s.znsMemory.Subscribe()
 	defer s.znsMemory.UnSubscribe(sub)
-
-	lastUpdateZone := make(map[int]time.Time)
+	lastUpdateZone := make(map[zoneNoSegmentTypePair]time.Time)
 	needUpdateSegment := make(map[int]struct{})
 
 	ticker := time.NewTicker(500 * time.Millisecond)
@@ -125,15 +124,19 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			// for different zoneNo
 			now := time.Now()
 			if update.ZoneNo != currentZoneNo {
-				last := lastUpdateZone[update.ZoneNo]
+				updatedZone := zoneNoSegmentTypePair{
+					ZoneNo:      update.ZoneNo,
+					SegmentType: update.SegmentType,
+				}
+				last := lastUpdateZone[updatedZone]
 				// skip send updates if last update of same zoneNo is less than 500ms
 				if now.Sub(last) < 500*time.Millisecond {
 					continue
 				}
 				// last update is more than 500ms
-				lastUpdateZone[update.ZoneNo] = now
+				lastUpdateZone[updatedZone] = now
 				// notice only zone number
-				data := ToSegmentResponse(update.ZoneNo, 0, nil)
+				data := ToSegmentResponse(update.ZoneNo, 0, update.SegmentType, nil)
 				respBuf.Push(data.Serialize())
 				continue
 			}
@@ -144,7 +147,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Error getting segment", err)
 					continue
 				}
-				data := ToSegmentResponse(currentZoneNo, segmentNo, segments.ValidMap)
+				data := ToSegmentResponse(currentZoneNo, segmentNo, znsmemory.UnknownSegment, segments.ValidMap)
 				respBuf.Push(data.Serialize())
 				delete(needUpdateSegment, segmentNo)
 			}

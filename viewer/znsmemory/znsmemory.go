@@ -123,8 +123,9 @@ func (m *memory) startEventLoop(ctx context.Context) {
 						sub := m.subscribers[i]
 						go func() {
 							sub.Event <- SegmentId{
-								ZoneNo:    updateSitEntry.ZoneNo,
-								SegmentNo: updateSitEntry.SegmentNo,
+								ZoneNo:      updateSitEntry.ZoneNo,
+								SegmentNo:   updateSitEntry.SegmentNo,
+								SegmentType: updateSitEntry.SegmentType,
 							}
 						}()
 					}
