@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -e
 
 # FEMU Image directory
@@ -7,7 +6,13 @@ IMAGE_DIR=$HOME/image
 # Virtual machine disk image
 IMAGE_FILE=debian.qcow2
 
+
 ROOT=$(pwd)
+if [ $(basename $PWD) = "scripts" ]
+then
+    ROOT=$(dirname $PWD)
+fi
+cd $ROOT
 
 if [ ! -d ./femu/build-femu ]
 then
@@ -26,12 +31,14 @@ then
     ./femu-copy-scripts.sh .
     sudo ./pkgdep.sh
     ./femu-compile.sh
+else
+    echo "FEMU is already installed."
 fi
 
 # update Image Path
-sed -i "s|IMGDIR=.*|IMGDIR=$IMAGE_DIR|g" run-zns.sh
-sed -i "s|OSIMGF=.*|OSIMGF=\$IMGDIR/$IMAGE_FILE|g" run-zns.sh
+sed -i "s|IMGDIR=.*|IMGDIR=$IMAGE_DIR|g" femu/build-femu/run-zns.sh
+sed -i "s|OSIMGF=.*|OSIMGF=\$IMGDIR/$IMAGE_FILE|g" femu/build-femu/run-zns.sh
 
-echo $ROOT
 cd $ROOT/femu/build-femu
+echo "Starting FEMU..."
 ./run-zns.sh

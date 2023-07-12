@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Zones</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .left-align {
+            text-align: end;
+        }
+    </style>
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v7.js"></script>
+</head>
+<body style="background-color: #f3f3f3">
+
+
+<!-- Create a div where the graph will take place -->
+<div class="container">
+    <div class="column">
+        <div>Blocks of Zone <b id="curZoneNum"></b></div>
+        <canvas id="chartCanvas"></canvas>
+    </div>
+    <div class="column">
+        <div id="zones" class="left-align"></div>
+    </div>
+</div>
+
+
+<script>
+    async function getZoneInfo() {
+        const response = await fetch('/api/zone/info');
+        if (!response.ok) {
+            throw new Error('Cannot get zone info');
+        }
+        return await response.json();
+    }
+
+    async function main() {
+        const currentZoneId = Number(document.location.pathname.slice(6))
+        const info = await getZoneInfo();
+        document.getElementById('curZoneNum').innerText = String(currentZoneId);
+
+        /* ---------- 캔버스 그리기 ---------- */
+
+        // 캔버스 크기와 셀 크기
+        const canvasWidth = info.block_per_segment;
+        const canvasHeight = info.total_segment_per_zone;
+        const cellSize = 1;
+
+        // 캔버스 생성
+        const canvas = d3.select("#chartCanvas")
+            .attr("width", canvasWidth * cellSize)
+            .attr("height", canvasHeight * cellSize)
+            .node();
+        const context = canvas.getContext("2d");
+
+        const cellColorMap = Array.from({length: canvasHeight}, () => {
+            return Array.from({length: canvasWidth});
+        });
+
+        function drawChart(row, y) {
+            row.forEach((d, i) => {
+                let color = "white";
+                if (d === 1) {
+                    color = "green";
+                } else if (d === -1) {
+                    color = "white";
+                }
+                if (cellColorMap[y][i] === color) {
+                    return;
+                }
+                cellColorMap[y][i] = color;
+                const xPos = i * cellSize;
+                const yPos = y * cellSize;
+                context.fillStyle = color;
+                context.fillRect(xPos, yPos, cellSize, cellSize);
+            });
+        }
+
+
+        /* ---------- svg 그리기 ---------- */
+
+        const ctx = new AbortController();
+        const signal = ctx.signal;
+
+        const margin = {top: 30, right: 25 + 50, bottom: 30, left: 40}
+        const width = 450 + 50 - margin.left - margin.right
+        const height = 800 - margin.top - margin.bottom
+
+        const svg = d3.select("#zones")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        const zoneTotalSize = info.total_zone;
+        let xLength = 15;
+        let yLength = Math.ceil(zoneTotalSize / xLength);
+        if (xLength > yLength) {
+            [xLength, yLength] = [yLength, xLength]
+        }
+
+        const xVars = Array.from({length: xLength}, (_, i) => i);
+        const yVars = Array.from({length: yLength}, (_, i) => i * xLength);
+        yVars.sort((a, b) => a - b)
+
+        // Build X scales and axis:
+        const xScale = d3.scaleBand()
+            .domain(xVars)
+            .range([0, width])
+            .padding(0.05);
+        svg.append("g")
+            .style("font-size", 15)
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale).tickSize(0))
+            .select(".domain").remove()
+
+        // Build Y scales and axis:
+        const yScale = d3.scaleBand()
+            .domain(yVars)
+            .range([0, height])
+            .padding(0.05);
+        svg.append("g")
+            .style("font-size", 15)
+            .call(d3.axisLeft(yScale).tickSize(0))
+            .select(".domain").remove()
+
+        // create a tooltip
+        const tooltip = d3.select("#zones")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+
+
+        // Three function that change the tooltip when user hover / move / leave a cell
+        const mouseover = function (event, d) {
+            if (zoneTotalSize <= d || d === currentZoneId) {
+                return
+            }
+            tooltip
+                .style("opacity", 1)
+            d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+        }
+        const mousemove = function (event, d) {
+            tooltip
+                .html("zone: " + d)
+                .style("top", (event.y + 5) + "px")
+                .style("left", (event.x + 30) + "px")
+        }
+        const mouseleave = function (event, d) {
+            if (zoneTotalSize <= d || d === currentZoneId) {
+                return
+            }
+            tooltip
+                .style("opacity", 0)
+            d3.select(this)
+                .style("stroke", "none")
+                .style("opacity", 0.8)
+        }
+
+        const zoneCell = Array.from({length: xLength * yLength}, (_, i) => i);
+
+        // add the squares
+        svg.selectAll()
+            .data(zoneCell, function (v, i) {
+                return i;
+            })
+            .join("rect")
+            .attr("x", function (v, i) {
+                return xScale(xVars[Math.floor(i % (zoneCell.length / yVars.length))])
+            })
+            .attr("y", function (v, i) {
+                return yScale(yVars[Math.floor(i / (zoneCell.length / yVars.length))])
+            })
+            .attr("width", xScale.bandwidth())
+            .attr("height", yScale.bandwidth())
+            .style("fill", function (v, i) {
+                if (zoneTotalSize <= i) {
+                    return "#f3f3f3"
+                }
+                return "black";
+            })
+            .style("stroke-width", 4)
+            .style("stroke", function (v, i) {
+                if (i === currentZoneId) {
+                    return "red"
+                }
+                return "none";
+            })
+            .style("opacity", 0.8)
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave)
+            .on("click", function (event, i) {
+                if (i === currentZoneId) {
+                    return
+                }
+                ctx.abort()
+                document.location.href = `/zone/${i}`;
+            })
+
+
+        // Add title to graph
+        svg.append("text")
+            .attr("x", 0)
+            .attr("y", -10)
+            .attr("text-anchor", "left")
+            .style("font-size", "22px")
+            .text("Zones");
+
+        const lastUpdateZone = {};
+
+        async function blinkZone(zoneNo) {
+            lastUpdateZone[zoneNo] = Date.now();
+            const cell = svg.selectAll("rect")
+                .filter(function (v, i) {
+                    return i === zoneNo;
+                })
+            cell.style("fill", "yellow")
+            setTimeout(() => {
+                if (Date.now() - lastUpdateZone[zoneNo] >= 1000) {
+                    cell.style("fill", "black")
+                }
+            }, 1000)
+        }
+
+
+        /* ---------- handle Stream Data ---------- */
+        async function handleStreamData() {
+            const response = await fetch(`/api/zone/${currentZoneId}`, {signal}); // Replace with your streaming endpoint URL
+            const reader = response.body.getReader();
+
+            let buf = [];
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) {
+                    break;
+                }
+                buf = buf.concat(Array.from(value));
+                while (true) {
+                    const pos = buf.findIndex((d) => d === 10)
+                    if (pos === -1) break;
+                    const part = buf.slice(0, pos)
+                    buf = buf.slice(pos + 1)
+                    const chunk = String.fromCharCode(...part)
+                    const parsed = JSON.parse(chunk);
+                    const t = parsed.time;
+                    const i = parsed.segment_no;
+                    let row = parsed.map;
+                    const zoneNo = parsed.zone_no;
+                    if (currentZoneId !== zoneNo) {
+                        blinkZone(zoneNo);
+                        continue;
+                    }
+                    if (!row) {
+                        row = Array.from({length: info.block_per_segment}, () => -1);
+                    }
+                    const ping = Date.now() - t
+                    console.log(`received ${i}, ping: ${ping}ms`)
+                    drawChart(row, i);
+                }
+            }
+            // Stream ended
+        }
+
+        handleStreamData();
+
+        /* ---------- end of main ---------- */
+    }
+
+
+    main();
+</script>
+
+</body>
+
