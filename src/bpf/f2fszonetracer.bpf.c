@@ -12,7 +12,7 @@ char LICENSE[] SEC("license") = "Dual BSD/GPL";
 /* BPF ringbuf map */
 struct {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
-    __uint(max_entries, 256 * 1024 /* 256KB */);
+    __uint(max_entries, 32 * 1024 * 1024 /* 32MB */);
 } rb SEC(".maps");
 
 struct event {

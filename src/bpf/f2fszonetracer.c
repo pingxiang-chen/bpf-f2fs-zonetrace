@@ -20,6 +20,8 @@ int segment_size = 2;  // 2 MiB
 int zone_size;
 int zone_blocks;
 
+unsigned int buf[3];
+
 struct event {
     int segno;
     unsigned int seg_type:6;
@@ -53,11 +55,13 @@ int handle_event(void *ctx, void *data, size_t data_sz) {
 
     unsigned int seg_per_zone = zone_size / segment_size;
     unsigned int cur_zone = e->segno / seg_per_zone;
+    
+    buf[0] = e->segno % 1024;
+    buf[1] = cur_zone;
+    buf[2] = __builtin_ctz(e->seg_type);
 
-    printf("update_sit_entry segno: %d cur_zone:%d seg_type:%u\n", e->segno % 1024, cur_zone, e->seg_type);
-    fflush(stdout);
+    write(1, buf, 12);
     write(1, e->cur_valid_map, 64);
-    printf("\n");
     return 0;
 }
 
