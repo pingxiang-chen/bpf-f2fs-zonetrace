@@ -13,11 +13,12 @@ func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read zone info: %w", err)
 	}
-	var totalZone, zoneBlocks, zoneCapBlocks int
-	_, err = fmt.Sscanf(line, "info: total_zone=%d zone_blocks=%d zone_cap_blocks=%d", &totalZone, &zoneBlocks, &zoneCapBlocks)
+	var totalZone, zoneBlocks int
+	_, err = fmt.Sscanf(line, "info: total_zone=%d zone_blocks=%d", &totalZone, &zoneBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("parseZoneInfo: %w", err)
 	}
+	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 	return &ZoneInfo{
 		TotalZone:               totalZone,
 		BlockPerSegment:         SegmentSize,
@@ -28,16 +29,19 @@ func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
 	}, nil
 }
 
-func ReadSegmentSitEntry(r *bufio.Reader) (*UpdateSitEntry, error) {
-	// update_sit_entry segno: 1033 cur_zone:12312
+func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
 	line, err := r.ReadString('\n')
 	if err != nil {
 		return nil, fmt.Errorf("read update_sit_entry: %w", err)
 	}
 	var segmentNum, curZone int
-	_, err = fmt.Sscanf(line, "update_sit_entry segno: %d cur_zone:%d", &segmentNum, &curZone)
+	var segmentType SegmentType
+	_, err = fmt.Sscanf(line, "update_sit_entry segno: %d cur_zone:%d seg_type:%d", &segmentNum, &curZone, &segmentType)
 	if err != nil {
 		return nil, fmt.Errorf("parse update_sit_entry: %w", err)
+	}
+	if !segmentType.IsValid() {
+		segmentType = UnknownSegment
 	}
 
 	// 64 bytes of validMap and newline
@@ -46,9 +50,10 @@ func ReadSegmentSitEntry(r *bufio.Reader) (*UpdateSitEntry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read update_sit_entry: %w", err)
 	}
-	return &UpdateSitEntry{
-		ZoneNo:    curZone,
-		SegmentNo: segmentNum,
-		ValidMap:  buf[:validMapSize],
+	return &SitEntryUpdate{
+		ZoneNo:      curZone,
+		SegmentNo:   segmentNum,
+		ValidMap:    buf[:validMapSize],
+		SegmentType: segmentType,
 	}, nil
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type ZNSMemory interface {
-	UpdateSegment(updateSitEntry *UpdateSitEntry)
+	UpdateSegment(updateSitEntry *SitEntryUpdate)
 	GetZone(zoneNum int) (*Zone, error)
 	GetSegment(zoneNum, segmentNum int) (*Segment, error)
 	GetZoneInfo() *ZoneInfo
@@ -25,7 +25,7 @@ type Subscriber struct {
 
 type memory struct {
 	zns             ZonedStorage
-	updateSitCh     chan *UpdateSitEntry
+	updateSitCh     chan *SitEntryUpdate
 	subscribers     []*Subscriber
 	subscriberMutex sync.RWMutex
 	isReceiving     bool
@@ -35,7 +35,7 @@ func (m *memory) GetZoneInfo() *ZoneInfo {
 	return &m.zns.ZoneInfo
 }
 
-func (m *memory) UpdateSegment(updateSitEntry *UpdateSitEntry) {
+func (m *memory) UpdateSegment(updateSitEntry *SitEntryUpdate) {
 	m.updateSitCh <- updateSitEntry
 }
 
@@ -86,7 +86,7 @@ func (m *memory) StartReceiveTrace(ctx context.Context, r *bufio.Reader) {
 			if ctx.Err() != nil {
 				return
 			}
-			u, err := ReadSegmentSitEntry(r)
+			u, err := ReadSitEntryUpdate(r)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
 					fmt.Println("input closed")
@@ -148,7 +148,7 @@ func New(ctx context.Context, info ZoneInfo) ZNSMemory {
 	}
 	m := &memory{
 		zns:             zns,
-		updateSitCh:     make(chan *UpdateSitEntry, 1024),
+		updateSitCh:     make(chan *SitEntryUpdate, 1024),
 		subscribers:     nil,
 		subscriberMutex: sync.RWMutex{},
 	}
