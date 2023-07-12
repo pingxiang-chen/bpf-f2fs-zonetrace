@@ -2,7 +2,6 @@ package znsmemory
 
 import (
 	"bufio"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -10,17 +9,15 @@ import (
 const validMapSize = SegmentSize / 8
 
 func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
-	var err error
-	intBuf := make([]byte, 4)
-	if _, err = r.Read(intBuf); err != nil {
-		return nil, fmt.Errorf("read totalZone: %w", err)
+	line, err := r.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("read zone info: %w", err)
 	}
-	totalZone := int(binary.BigEndian.Uint32(intBuf))
-
-	if _, err = r.Read(intBuf); err != nil {
-		return nil, fmt.Errorf("read zoneBlocks: %w", err)
+	var totalZone, zoneBlocks int
+	_, err = fmt.Sscanf(line, "info: total_zone=%d zone_blocks=%d", &totalZone, &zoneBlocks)
+	if err != nil {
+		return nil, fmt.Errorf("parseZoneInfo: %w", err)
 	}
-	zoneBlocks := int(binary.BigEndian.Uint32(intBuf))
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 	return &ZoneInfo{
 		TotalZone:               totalZone,
