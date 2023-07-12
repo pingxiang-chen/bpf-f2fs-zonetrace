@@ -4,6 +4,11 @@ import secrets
 import sys
 import time
 
+def read_buf(buf):
+    i = buf.tell()
+    buf.seek(0)
+    return buf.read(i)
+
 if __name__ == '__main__':
     sys.stdout.buffer.write(b'info: total_zone=905 zone_blocks=524288\n')
     buf = io.BytesIO()
@@ -12,11 +17,10 @@ if __name__ == '__main__':
         seg_no = random.randint(0, 1023)
         cur_zone = random.randint(0, 904)
         seg_type = seg_types[cur_zone]
-        buf.write(f"update_sit_entry segno: {seg_no} cur_zone:{cur_zone} seg_type:{seg_type}\n".encode())
+        buf.write(seg_no.to_bytes(4, 'little'))
+        buf.write(cur_zone.to_bytes(4, 'little'))
+        buf.write(seg_type.to_bytes(4, 'little'))
         buf.write(secrets.token_bytes(64))
-        buf.write(b'\n')
-        i = buf.tell()
-        buf.seek(0)
-        sys.stdout.buffer.write(buf.read(i))
+        sys.stdout.buffer.write(read_buf(buf))
         buf.seek(0)
 #         time.sleep(0.01)
