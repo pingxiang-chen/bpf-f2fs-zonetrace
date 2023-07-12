@@ -37,17 +37,17 @@ func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
 	if _, err = r.Read(intBuf); err != nil {
 		return nil, fmt.Errorf("read segmentNum: %w", err)
 	}
-	segmentNum := int(binary.BigEndian.Uint32(intBuf))
+	segmentNum := int(binary.LittleEndian.Uint32(intBuf))
 
 	if _, err = r.Read(intBuf); err != nil {
 		return nil, fmt.Errorf("read curZone: %w", err)
 	}
-	curZone := int(binary.BigEndian.Uint32(intBuf))
+	curZone := int(binary.LittleEndian.Uint32(intBuf))
 
 	if _, err = r.Read(intBuf); err != nil {
 		return nil, fmt.Errorf("read segmentType: %w", err)
 	}
-	segmentType := SegmentType(binary.BigEndian.Uint32(intBuf))
+	segmentType := SegmentType(binary.LittleEndian.Uint32(intBuf))
 	if !segmentType.IsValid() {
 		segmentType = UnknownSegment
 	}
