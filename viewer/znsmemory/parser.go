@@ -2,6 +2,7 @@ package znsmemory
 
 import (
 	"bufio"
+	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -30,16 +31,23 @@ func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
 }
 
 func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
-	line, err := r.ReadString('\n')
-	if err != nil {
-		return nil, fmt.Errorf("read update_sit_entry: %w", err)
+	var err error
+	intBuf := make([]byte, 4)
+
+	if _, err = r.Read(intBuf); err != nil {
+		return nil, fmt.Errorf("read segmentNum: %w", err)
 	}
-	var segmentNum, curZone int
-	var segmentType SegmentType
-	_, err = fmt.Sscanf(line, "update_sit_entry segno: %d cur_zone:%d seg_type:%d", &segmentNum, &curZone, &segmentType)
-	if err != nil {
-		return nil, fmt.Errorf("parse update_sit_entry: %w", err)
+	segmentNum := int(binary.BigEndian.Uint32(intBuf))
+
+	if _, err = r.Read(intBuf); err != nil {
+		return nil, fmt.Errorf("read curZone: %w", err)
 	}
+	curZone := int(binary.BigEndian.Uint32(intBuf))
+
+	if _, err = r.Read(intBuf); err != nil {
+		return nil, fmt.Errorf("read segmentType: %w", err)
+	}
+	segmentType := SegmentType(binary.BigEndian.Uint32(intBuf))
 	if !segmentType.IsValid() {
 		segmentType = UnknownSegment
 	}
