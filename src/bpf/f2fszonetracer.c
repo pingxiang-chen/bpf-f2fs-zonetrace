@@ -4,6 +4,7 @@
 
 #include <bpf/libbpf.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,14 +13,16 @@
 
 #include "f2fszonetracer.skel.h"
 
-int nr_zone;
-int nr_op_zone;
+#define DEBUG 0
+
+int nr_zones;
+int segment_size = 2;  // 2 MiB
 int zone_size;
 int zone_blocks;
-int zone_cap_blocks;
 
 struct event {
     int segno;
+    unsigned int seg_type:6;
     unsigned char cur_valid_map[65];
 };
 
@@ -48,34 +51,66 @@ void bump_memlock_rlimit(void) {
 int handle_event(void *ctx, void *data, size_t data_sz) {
     const struct event *e = data;
 
-    const unsigned int segment_size = 2;  // 2 MiB
     unsigned int seg_per_zone = zone_size / segment_size;
     unsigned int cur_zone = e->segno / seg_per_zone;
 
-    printf("update_sit_entry segno: %d cur_zone:%d\n", e->segno % 1024, cur_zone);
+    printf("update_sit_entry segno: %d cur_zone:%d seg_type:%u\n", e->segno % 1024, cur_zone, e->seg_type);
     fflush(stdout);
     write(1, e->cur_valid_map, 64);
     printf("\n");
     return 0;
 }
 
+int read_sysfs_device_queue(const char *device_path, const char *filename) {
+    FILE *proc;
+    char cmd[1024];
+    int value;
+
+    snprintf(cmd, sizeof(cmd), "cat /sys/block/%s/queue/%s", device_path, filename);
+    if (DEBUG)
+        printf("debug: cmd=%s\n", cmd);
+
+    proc = popen(cmd, "r");
+
+    if (!proc) { /* validate pipe open for reading */
+        fprintf(stderr, "error: process open failed.\n");
+        return 1;
+    }
+
+    if (fscanf(proc, "%d", &value) == 1) { /* read/validate value */
+        if (DEBUG)
+            printf("debug: value: %d\n", value);
+        pclose(proc);
+        return value;
+    }
+
+    fprintf(stderr, "error: invalid response.\n");
+    pclose(proc);
+    return -1;
+}
+
 int main(int argc, char **argv) {
-    if (argc < 4) {
-        printf("Usage: sudo %s <nr_zone> <nr_op_zone> <zone_size(MiB)>\n", argv[0]);
+    if (argc != 2) {
+        printf("Usage: sudo %s <device_name>\nex) sudo %s nvme0n1\n", argv[0], argv[0]);
         return 1;
     }
     struct ring_buffer *rb = NULL;
     struct f2fszonetracer_bpf *skel;
     int err;
 
-    nr_zone = atoi(argv[1]);
-    nr_op_zone = atoi(argv[2]);
-    zone_size = atoi(argv[3]);
+    nr_zones = read_sysfs_device_queue(argv[1], "nr_zones");
+    zone_blocks = read_sysfs_device_queue(argv[1], "chunk_sectors") / 8;
+    zone_size = zone_blocks * 4 / 1024; // MiB
 
-    zone_blocks = 524288;
-    zone_cap_blocks = 275712;
+    if (DEBUG)
+        printf("debug: nr_zones=%d zone_blocks=%d\n", nr_zones, zone_blocks);
 
-    printf("info: total_zone=%d zone_blocks=%d zone_cap_blocks=%d\n", nr_zone, zone_blocks, zone_cap_blocks);
+    if (nr_zones < 0 || zone_blocks < 0) {
+        printf("error: failed to read sysfs\n");
+        return 1;
+    }
+
+    printf("info: total_zone=%d zone_blocks=%d\n", nr_zones, zone_blocks);
     fflush(stdout);
 
     /* Set up libbpf errors and debug info callback */

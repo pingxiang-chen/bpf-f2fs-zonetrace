@@ -6,6 +6,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
+
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
 
 /* BPF ringbuf map */
@@ -16,6 +17,7 @@ struct {
 
 struct event {
     int segno;
+    unsigned int seg_type : 6;
     unsigned char cur_valid_map[65];
 };
 
@@ -39,6 +41,7 @@ int BPF_PROG(update_sit_entry, struct f2fs_sb_info *sbi, block_t blkaddr) {
     unsigned char *bitmap = BPF_CORE_READ(se, cur_valid_map);
 
     e->segno = segno;
+    e->seg_type = BPF_CORE_READ_BITFIELD_PROBED(se, type);
     bpf_core_read(&e->cur_valid_map, sizeof(e->cur_valid_map), (void *)bitmap);
 
     bpf_ringbuf_submit(e, 0);
