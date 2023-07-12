@@ -52,16 +52,15 @@ func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
 		segmentType = UnknownSegment
 	}
 
-	// 64 bytes of validMap and newline
-	buf := make([]byte, validMapSize+1) // 64 bytes + 1 newline
-	_, err = io.ReadFull(r, buf)
+	validMap := make([]byte, validMapSize)
+	_, err = io.ReadFull(r, validMap)
 	if err != nil {
 		return nil, fmt.Errorf("read update_sit_entry: %w", err)
 	}
 	return &SitEntryUpdate{
 		ZoneNo:      curZone,
 		SegmentNo:   segmentNum,
-		ValidMap:    buf[:validMapSize],
+		ValidMap:    validMap,
 		SegmentType: segmentType,
 	}, nil
 }
