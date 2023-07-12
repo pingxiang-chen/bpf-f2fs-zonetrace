@@ -275,8 +275,8 @@
                     console.log(parsed)
                     let row = parsed.map;
                     const zoneNo = parsed.zone_no;
+                    blinkZone(zoneNo, segType);
                     if (currentZoneId !== zoneNo) {
-                        blinkZone(zoneNo, segType);
                         continue;
                     }
                     if (!row) {

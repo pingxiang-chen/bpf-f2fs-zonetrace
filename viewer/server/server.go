@@ -104,6 +104,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer s.znsMemory.UnSubscribe(sub)
 	lastUpdateZone := make(map[zoneNoSegmentTypePair]time.Time)
 	needUpdateSegment := make(map[int]struct{})
+	lastSegmentType := znsmemory.UnknownSegment
 
 	ticker := time.NewTicker(500 * time.Millisecond)
 	go func() {
@@ -119,6 +120,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			if update.ZoneNo == currentZoneNo {
 				// for same zoneNo
 				needUpdateSegment[update.SegmentNo] = struct{}{}
+				lastSegmentType = update.SegmentType
 				continue
 			}
 			// for different zoneNo
@@ -147,7 +149,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Error getting segment", err)
 					continue
 				}
-				data := ToSegmentResponse(currentZoneNo, segmentNo, znsmemory.UnknownSegment, segments.ValidMap)
+				data := ToSegmentResponse(currentZoneNo, segmentNo, lastSegmentType, segments.ValidMap)
 				respBuf.Push(data.Serialize())
 				delete(needUpdateSegment, segmentNo)
 			}
