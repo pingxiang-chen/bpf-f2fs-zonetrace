@@ -6,7 +6,6 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
 
 /* BPF ringbuf map */
@@ -17,7 +16,7 @@ struct {
 
 struct event {
     int segno;
-    unsigned int seg_type : 6;
+    unsigned int seg_type;
     unsigned char cur_valid_map[65];
 };
 

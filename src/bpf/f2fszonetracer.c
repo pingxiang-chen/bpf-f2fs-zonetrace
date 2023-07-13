@@ -16,7 +16,7 @@
 #define DEBUG 0
 
 int nr_zones;
-int segment_size = 2;  // 2 MiB
+int segment_size = 2; // 2 MiB
 int zone_size;
 int zone_blocks;
 
@@ -24,7 +24,7 @@ unsigned int buf[3];
 
 struct event {
     int segno;
-    unsigned int seg_type:6;
+    unsigned int seg_type;
     unsigned char cur_valid_map[65];
 };
 
@@ -55,10 +55,10 @@ int handle_event(void *ctx, void *data, size_t data_sz) {
 
     unsigned int seg_per_zone = zone_size / segment_size;
     unsigned int cur_zone = e->segno / seg_per_zone;
-    
+
     buf[0] = e->segno % seg_per_zone;
     buf[1] = cur_zone;
-    buf[2] = __builtin_ctz(e->seg_type);
+    buf[2] = e->seg_type; // __builtin_ctz(e->seg_type);
 
     write(1, buf, 12);
     write(1, e->cur_valid_map, 64);
