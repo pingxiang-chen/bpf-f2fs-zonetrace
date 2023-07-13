@@ -16,15 +16,17 @@
 #define DEBUG 0
 
 int nr_zones;
-int segment_size = 2;  // 2 MiB
+int segment_size = 2; // 2 MiB
 int zone_size;
 int zone_blocks;
+int zone_start_blkaddr;
+int zone_segno_offset;
 
 unsigned int buf[3];
 
 struct event {
     int segno;
-    unsigned int seg_type:6;
+    unsigned int seg_type;
     unsigned char cur_valid_map[65];
 };
 
@@ -53,12 +55,17 @@ void bump_memlock_rlimit(void) {
 int handle_event(void *ctx, void *data, size_t data_sz) {
     const struct event *e = data;
 
+    int calculated_segno = e->segno - zone_segno_offset;
+    if (calculated_segno < 0) {
+        return 0;
+    }
+
     unsigned int seg_per_zone = zone_size / segment_size;
-    unsigned int cur_zone = e->segno / seg_per_zone;
-    
-    buf[0] = e->segno % seg_per_zone;
+    unsigned int cur_zone = calculated_segno / seg_per_zone;
+
+    buf[0] = calculated_segno % seg_per_zone;
     buf[1] = cur_zone;
-    buf[2] = __builtin_ctz(e->seg_type);
+    buf[2] = e->seg_type; // __builtin_ctz(e->seg_type);
 
     write(1, buf, 12);
     write(1, e->cur_valid_map, 64);
@@ -94,8 +101,8 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        printf("Usage: sudo %s <device_name>\nex) sudo %s nvme0n1\n", argv[0], argv[0]);
+    if (argc != 3) {
+        printf("Usage: sudo %s <device_name> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 65536\n", argv[0], argv[0]);
         return 1;
     }
     struct ring_buffer *rb = NULL;
@@ -104,7 +111,9 @@ int main(int argc, char **argv) {
 
     nr_zones = read_sysfs_device_queue(argv[1], "nr_zones");
     zone_blocks = read_sysfs_device_queue(argv[1], "chunk_sectors") / 8;
-    zone_size = zone_blocks * 4 / 1024; // MiB
+    zone_size = zone_blocks * 4 / 1024;           // MiB
+    zone_start_blkaddr = atoi(argv[2]);           // zoned start block address
+    zone_segno_offset = zone_start_blkaddr / 512; // total amount of regular block device segments
 
     if (DEBUG)
         printf("debug: nr_zones=%d zone_blocks=%d\n", nr_zones, zone_blocks);

@@ -204,7 +204,7 @@
             .style("stroke-width", 4)
             .style("stroke", function (v, i) {
                 if (i === currentZoneId) {
-                    return "red"
+                    return "black"
                 }
                 return "none";
             })
@@ -235,15 +235,15 @@
             console.log(segmentType)
             const colors = ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'];
             let color = colors[segmentType] || 'gray';
-
-            lastUpdateZone[zoneNo] = Date.now();
+            const _now = Date.now();
+            lastUpdateZone[zoneNo] = _now;
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
                 })
             cell.style("fill", color)
             setTimeout(() => {
-                if (Date.now() - lastUpdateZone[zoneNo] >= 1000) {
+                if (lastUpdateZone[zoneNo] === _now) {
                     cell.style("fill", "black")
                 }
             }, 1000)
