@@ -26,5 +26,5 @@ fi
 
 mkdir -p $MOUNT_POINT
 umount -q $MOUNT_POINT
-mkfs.f2fs -d 1 -o 1 -m -f -c /dev/nvme0n1 /dev/loop77
+mkfs.f2fs -d 1 -o 3 -m -f -c /dev/nvme0n1 /dev/loop77
 mount -t f2fs /dev/loop$LOOP_DEV_NUM $MOUNT_POINT
