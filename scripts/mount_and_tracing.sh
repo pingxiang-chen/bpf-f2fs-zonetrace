@@ -2,7 +2,12 @@
 
 set -e
 
-BLKADDR_FILE=/tmp/f2fs_start_blkaddr.txt
+BLKADDR_FILE=$HOME/.config/zonetracer/f2fs_start_blkaddr.txt
+
+if [ ! -d $(dirname $BLKADDR_FILE) ]
+then
+    mkdir -p $(dirname $BLKADDR_FILE)
+fi
 
 ROOT=$(pwd)
 if [ $(basename $PWD) = "scripts" ]
