@@ -19,5 +19,5 @@ then
     echo $START_BLKADDR > $BLKADDR_FILE
 fi
 
-START_BLKADDR=$(cat $START_BLKADDR)
+START_BLKADDR=$(cat $BLKADDR_FILE)
 sudo ./src/bpf/f2fszonetracer nvme0n1 $START_BLKADDR | ./viewer/viewer
