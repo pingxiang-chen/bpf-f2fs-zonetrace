@@ -21,6 +21,7 @@
     </style>
     <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
 </head>
 <body style="background-color: #f3f3f3">
 
@@ -252,6 +253,9 @@
 
         /* ---------- handle Stream Data ---------- */
         async function handleStreamData() {
+            const root = await protobuf.load("/static/zns.proto");
+            const ZoneResponse = root.lookupType('ZoneResponse');
+
             const response = await fetch(`/api/zone/${currentZoneId}`, {signal}); // Replace with your streaming endpoint URL
             const reader = response.body.getReader();
 
@@ -263,28 +267,33 @@
                 }
                 buf = buf.concat(Array.from(value));
                 while (true) {
-                    const pos = buf.findIndex((d) => d === 10)
-                    if (pos === -1) break;
-                    const part = buf.slice(0, pos)
-                    buf = buf.slice(pos + 1)
-                    const chunk = String.fromCharCode(...part)
-                    const parsed = JSON.parse(chunk);
-                    const t = parsed.time;
-                    const i = parsed.segment_no;
-                    const segType = parsed.segment_type;
-                    console.log(parsed)
-                    let row = parsed.map;
-                    const zoneNo = parsed.zone_no;
-                    blinkZone(zoneNo, segType);
-                    if (currentZoneId !== zoneNo) {
+                    const r = protobuf.Reader.create(buf)
+                    let zone;
+                    try {
+                        zone = ZoneResponse.decodeDelimited(r);
+                    } catch (e) {
+                        break;
+                    }
+                    buf = buf.slice(r.pos);
+                    blinkZone(zone.zoneNo, zone.segmentType);
+                    if (currentZoneId !== zone.zoneNo) {
                         continue;
                     }
-                    if (!row) {
-                        row = Array.from({length: info.block_per_segment}, () => -1);
-                    }
-                    const ping = Date.now() - t
-                    console.log(`received ${i}, ping: ${ping}ms`)
-                    drawChart(row, i);
+                    zone.segments.forEach((segment, _) => {
+                        let row = [];
+                        if (segment.map) {
+                            for (let b of Object.values(segment.map)) {
+                                for (let i = 0; i < 8; i++) {
+                                    row.push((b >> i) & 1);
+                                }
+                            }
+                        } else {
+                            row = Array.from({length: info.block_per_segment}, () => -1);
+                        }
+                        const ping = Date.now() - zone.time;
+                        console.log(`received ${segment.segmentNo}, ping: ${ping}ms`)
+                        drawChart(row, segment.segmentNo);
+                    })
                 }
             }
             // Stream ended

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos;protos";
+
+message Segment {
+  int32 segment_no = 1;
+  bytes map = 2;
+}
+
+message SegmentResponse {
+  int64 time = 1;
+  int32 zone_no = 2;
+  Segment segment = 3;
+}
+
+message ZoneResponse {
+  int64 time = 1;
+  int32 zone_no = 2;
+  int32 segment_type = 3;
+  repeated Segment segments = 4;
+}
