@@ -35,10 +35,11 @@ else
     echo "FEMU is already installed."
 fi
 
+cd $ROOT/femu/build-femu
+
 # update Image Path
 sed -i "s|IMGDIR=.*|IMGDIR=$IMAGE_DIR|g" femu/build-femu/run-zns.sh
 sed -i "s|OSIMGF=.*|OSIMGF=\$IMGDIR/$IMAGE_FILE|g" femu/build-femu/run-zns.sh
 
-cd $ROOT/femu/build-femu
 echo "Starting FEMU..."
 ./run-zns.sh
