@@ -6,6 +6,7 @@ MOUNT_POINT=/mnt/f2fs
 METADATA_IMG=/tmp/f2fs_metadata.img
 
 BLKADDR_FILE=$HOME/.config/zonetracer/f2fs_blkaddr.txt
+MKFS_LOG_FILE=$HOME/.config/zonetracer/mkfs.f2fs
 
 if [ "$EUID" -ne 0 ]
 then
@@ -34,8 +35,9 @@ fi
 
 mkdir -p $MOUNT_POINT
 umount -q $MOUNT_POINT
-MKFS_OUTPUT=$(mkfs.f2fs -d 1 -o $OVERPROVISIONING_SECTIONS -m -f -c /dev/nvme0n1 /dev/loop$LOOP_DEV_NUM)
-MAIN_BLKADDR=$(echo $MKFS_OUTPUT | awk '/main_blkaddr/ {print $2}')
-START_BLKADDR=$(echo $MKFS_OUTPUT | awk '/start_blkaddr/ {print $2}')
+mkfs.f2fs -d 1 -o $OVERPROVISIONING_SECTIONS -m -f -c /dev/nvme0n1 /dev/loop$LOOP_DEV_NUM | tee $MKFS_LOG_FILE
+cat $MKFS_LOG_FILE
+MAIN_BLKADDR=$(cat $MKFS_LOG_FILE | awk '/main_blkaddr/{print $NF}')
+START_BLKADDR=$(cat $MKFS_LOG_FILE | awk '/start_blkaddr/ {print $2}')
 echo "$MAIN_BLKADDR $START_BLKADDR" > $BLKADDR_FILE
 mount -t f2fs /dev/loop$LOOP_DEV_NUM $MOUNT_POINT
