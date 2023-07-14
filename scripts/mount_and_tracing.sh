@@ -2,7 +2,7 @@
 
 set -e
 
-BLKADDR_FILE=$HOME/.config/zonetracer/f2fs_start_blkaddr.txt
+BLKADDR_FILE=$HOME/.config/zonetracer/f2fs_blkaddr.txt
 
 if [ ! -d $(dirname $BLKADDR_FILE) ]
 then
@@ -18,11 +18,15 @@ cd $ROOT
 
 if [ ! -f $BLKADDR_FILE ]
 then
-    echo "start_blkaddr is not found. formatting f2fs..."
+    echo "blkaddr is not found. formatting f2fs..."
+    MOUNT_F2FS_OUTPUT=$(sudo ./scripts/mount_f2fs.sh)
     # run mount_f2fs.sh and get zoned start_blkaddr
-    START_BLKADDR=$(sudo ./scripts/mount_f2fs.sh | awk '/start_blkaddr/ {print $2}')
-    echo $START_BLKADDR > $BLKADDR_FILE
+    START_BLKADDR=$(echo $MOUNT_F2FS_OUTPUT | awk '/start_blkaddr/ {print $2}')
+    MAIN_BLKADDR=$(echo $MOUNT_F2FS_OUTPUT | awk '/main_blkaddr/ {print $2}')
+    echo "$MAIN_BLKADDR $START_BLKADDR" > $BLKADDR_FILE
 fi
 
-START_BLKADDR=$(cat $BLKADDR_FILE)
-sudo ./src/bpf/f2fszonetracer nvme0n1 $START_BLKADDR | ./viewer/viewer
+MAIN_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $1}')
+START_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $2}')
+
+sudo ./src/bpf/f2fszonetracer nvme0n1 $MAIN_BLKADDR $START_BLKADDR | ./viewer/viewer
