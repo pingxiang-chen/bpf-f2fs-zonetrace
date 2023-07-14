@@ -42,7 +42,7 @@
 <!-- Create a div where the graph will take place -->
 <div class="container">
     <div class="column">
-        <div>Blocks of Zone <b id="curZoneNum"></b></div>
+        <div>Blocks of Zone <b id="curZoneNum"></b> (<span id="curSegType"></span>)</div>
         <canvas id="chartCanvas"></canvas>
     </div>
 
@@ -87,18 +87,38 @@
 
 
 <script>
+    const currentZoneId = Number(document.location.pathname.slice(6))
+    const curSegTypeSpan = document.getElementById('curSegType')
+    let lastSegmentType = -2;
+
     async function getZoneInfo() {
-        const response = await fetch('/api/zone/info');
+        const response = await fetch(`/api/info/${currentZoneId}`);
         if (!response.ok) {
             throw new Error('Cannot get zone info');
         }
         return await response.json();
     }
 
+    function getSegmentTypeLabel(segmentType) {
+        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
+        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node'][segmentType + 2];
+    }
+
+    function getSegmentTypeColor(segmentType) {
+        if (segmentType < 0 || 5 < segmentType) return 'gray';
+        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'][segmentType];
+    }
+
+    async function updateCurrentSegmentType(segmentType) {
+        if (lastSegmentType === segmentType) return;
+        lastSegmentType = segmentType;
+        curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
+    }
+
     async function main() {
-        const currentZoneId = Number(document.location.pathname.slice(6))
         const info = await getZoneInfo();
         document.getElementById('curZoneNum').innerText = String(currentZoneId);
+        updateCurrentSegmentType(info.last_segment_type);
 
         /* ---------- 캔버스 그리기 ---------- */
 
@@ -283,8 +303,10 @@
         const lastUpdateZone = {};
 
         async function blinkZone(zoneNo, segmentType) {
-            const colors = ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'];
-            let color = colors[segmentType] || 'gray';
+            if (zoneNo === currentZoneId) {
+                updateCurrentSegmentType(segmentType)
+            }
+            let color = getSegmentTypeColor(segmentType);
             const _now = Date.now();
             lastUpdateZone[zoneNo] = _now;
             const cell = svg.selectAll("rect")
@@ -324,10 +346,11 @@
                         break;
                     }
                     buf = buf.slice(r.pos);
-                    blinkZone(zone.zoneNo, zone.segmentType);
-                    if (currentZoneId !== zone.zoneNo) {
-                        continue;
+
+                    if (zone.segmentType !== -2) {
+                        blinkZone(zone.zoneNo, zone.segmentType);
                     }
+
                     zone.segments.forEach((segment, _) => {
                         let row = [];
                         if (segment.map) {

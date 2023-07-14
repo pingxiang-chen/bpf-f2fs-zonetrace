@@ -16,6 +16,7 @@ type ZoneInfoResponse struct {
 	AvailableBlockPerZone   int `json:"available_block_per_zone"`
 	TotalSegmentPerZone     int `json:"total_segment_per_zone"`
 	AvailableSegmentPerZone int `json:"available_segment_per_zone"`
+	LastSegmentType         int `json:"last_segment_type"`
 }
 
 func (z *ZoneInfoResponse) Serialize() []byte {

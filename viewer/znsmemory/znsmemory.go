@@ -115,6 +115,9 @@ func (m *memory) startEventLoop(ctx context.Context) {
 					fmt.Printf("invalid segment no %d\n", updateSitEntry.SegmentNo)
 					continue
 				}
+				if m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType != updateSitEntry.SegmentType {
+					m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = updateSitEntry.SegmentType
+				}
 				m.zns.Zones[updateSitEntry.ZoneNo].Segments[updateSitEntry.SegmentNo].ValidMap = updateSitEntry.ValidMap
 				func() {
 					m.subscriberMutex.RLock()
@@ -139,8 +142,9 @@ func New(ctx context.Context, info ZoneInfo) ZNSMemory {
 	zones := make([]Zone, 0, info.TotalZone)
 	for i := 0; i < info.TotalZone; i++ {
 		zones = append(zones, Zone{
-			ZoneNo:   i,
-			Segments: make([]Segment, info.TotalSegmentPerZone),
+			ZoneNo:          i,
+			Segments:        make([]Segment, info.TotalSegmentPerZone),
+			LastSegmentType: UnknownSegment,
 		})
 	}
 	zns := ZonedStorage{

@@ -19,6 +19,10 @@ type api struct {
 }
 
 func (s *api) indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.RequestURI != "/" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
 	http.Redirect(w, r, "/zone/0", http.StatusFound)
 }
 
@@ -47,10 +51,21 @@ func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
+	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
+	currentZoneNo, err := strconv.Atoi(pk)
+	if err != nil {
+		http.Error(w, "Invalid zone number", http.StatusBadRequest)
+		return
+	}
 	zoneInfo := s.znsMemory.GetZoneInfo()
-	data := ToZoneInfoResponse(*zoneInfo)
+	zone, err := s.znsMemory.GetZone(currentZoneNo)
+	if err != nil {
+		http.Error(w, "Error getting zone", http.StatusInternalServerError)
+		return
+	}
+	data := ToZoneInfoResponse(*zoneInfo, zone.LastSegmentType)
 	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write(data.Serialize())
+	_, err = w.Write(data.Serialize())
 	if err != nil {
 		http.Error(w, "Error writing data", http.StatusInternalServerError)
 		return
@@ -112,15 +127,14 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			Map:       segment.ValidMap,
 		}
 	}
-	data := ToZoneResponse(zone.ZoneNo, znsmemory.UnknownSegment, segments)
+	data := ToZoneResponse(zone.ZoneNo, znsmemory.NotChanged, segments)
 	respBuf.Push(data.Serialize())
 
 	// subscribe zone updates
 	sub := s.znsMemory.Subscribe()
 	defer s.znsMemory.UnSubscribe(sub)
-	lastUpdateZone := make(map[zoneNoSegmentTypePair]time.Time)
+	lastZoneUpdateTime := make(map[zoneNoSegmentTypePair]time.Time)
 	needUpdateSegment := make(map[int]struct{})
-	lastSegmentType := znsmemory.UnknownSegment
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	go func() {
@@ -134,30 +148,21 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		case update := <-sub.Event:
 			if update.ZoneNo == currentZoneNo {
-				// for same zoneNo
 				needUpdateSegment[update.SegmentNo] = struct{}{}
-				lastSegmentType = update.SegmentType
-				continue
 			}
-			// for different zoneNo
+
+			// for update segment type
 			now := time.Now()
-			if update.ZoneNo != currentZoneNo {
-				updatedZone := zoneNoSegmentTypePair{
-					ZoneNo:      update.ZoneNo,
-					SegmentType: update.SegmentType,
-				}
-				last := lastUpdateZone[updatedZone]
-				// skip send updates if last update of same zoneNo is less than 500ms
-				if now.Sub(last) < 500*time.Millisecond {
-					continue
-				}
-				// last update is more than 500ms
-				lastUpdateZone[updatedZone] = now
-				// notice only zone number
-				data = ToZoneResponse(update.ZoneNo, update.SegmentType, nil)
-				respBuf.Push(data.Serialize())
+			updatedZone := zoneNoSegmentTypePair{ZoneNo: update.ZoneNo, SegmentType: update.SegmentType}
+			last := lastZoneUpdateTime[updatedZone]
+			// skip send updates if last update of same zoneNo is less than 500ms
+			if now.Sub(last) < 500*time.Millisecond {
 				continue
 			}
+			lastZoneUpdateTime[updatedZone] = now
+			// notice only zone number
+			data = ToZoneResponse(update.ZoneNo, update.SegmentType, nil)
+			respBuf.Push(data.Serialize())
 		case <-ticker.C:
 			if len(needUpdateSegment) == 0 {
 				continue
@@ -175,7 +180,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 				})
 				delete(needUpdateSegment, segmentNo)
 			}
-			data = ToZoneResponse(currentZoneNo, lastSegmentType, segments)
+			data = ToZoneResponse(currentZoneNo, znsmemory.NotChanged, segments)
 			respBuf.Push(data.Serialize())
 		}
 	}
@@ -196,11 +201,11 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 		znsMemory: znsMemory,
 	}
 	handler := http.NewServeMux()
-	handler.HandleFunc("/", a.indexHandler)
 	handler.HandleFunc("/zone/", a.htmlHandler)
-	handler.HandleFunc("/api/zone/info", a.zoneInfoHandler)
+	handler.HandleFunc("/api/info/", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
 	handler.HandleFunc("/static/", a.staticsHandler)
+	handler.HandleFunc("/", a.indexHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: handler,
