@@ -2,13 +2,15 @@
 
 ZoneTrace is an eBPF-based program that can visualize the space management of each zone on F2FS on ZNS SSDs in real-time without any kernel modification. We believe ZoneTrace can help users analyze F2FS with ease and open up several interesting research topics on ZNS SSDs.
 
-# Host Machine Requirements
+# Quick Start
+
+> ⚠️ This project is still in the early stage of development. If you have a real ZNS SSDs and want to try ZoneTrace, please contact us. We will help you to set up the environment and test ZoneTrace. For now, we only tested on the FEMU environment.
+
+## Host Machine Requirements
 
 - Only Debian/Ubuntu based distributions supported (for FEMU)
 - 8+ cores, 12GB+ RAM (for emulating 4GB NVMe ZNS SSDs)
 - 20GB+ disk space
-
-# Quick Start
 
 1. Prepare FEMU environment
 
