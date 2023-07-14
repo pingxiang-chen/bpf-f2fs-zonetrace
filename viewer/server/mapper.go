@@ -16,34 +16,12 @@ func ToZoneInfoResponse(info znsmemory.ZoneInfo) ZoneInfoResponse {
 	}
 }
 
-func ToSegmentResponse(zoneNo int, segmentNo int, segmentType znsmemory.SegmentType, validMap znsmemory.ValidMap) SegmentResponse {
+func ToZoneResponse(zoneNo int, segmentType znsmemory.SegmentType, segments []Segment) ZoneResponse {
 	t := time.Now().UnixNano() / int64(time.Millisecond) // unix time in ms
-	if len(validMap) == 0 {
-		return SegmentResponse{
-			Time:        t,
-			ZoneNo:      zoneNo,
-			SegmentNo:   segmentNo,
-			SegmentType: int(segmentType),
-			Map:         nil,
-		}
-	}
-	row := make([]int, 512)
-	rowIndex := 0
-	for _, b := range validMap {
-		for i := 0; i < 8; i++ {
-			if b&(1<<uint(i)) != 0 {
-				row[rowIndex] = 1
-			} else {
-				row[rowIndex] = 0
-			}
-			rowIndex++
-		}
-	}
-	return SegmentResponse{
+	return ZoneResponse{
 		Time:        t,
 		ZoneNo:      zoneNo,
-		SegmentNo:   segmentNo,
 		SegmentType: int(segmentType),
-		Map:         row,
+		Segments:    segments,
 	}
 }

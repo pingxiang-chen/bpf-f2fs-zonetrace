@@ -1,21 +1,18 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server/statics"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 )
-
-//go:embed statics/index.html
-var indexHtml []byte
 
 type api struct {
 	znsMemory znsmemory.ZNSMemory
@@ -27,7 +24,22 @@ func (s *api) indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	_, err := w.Write(indexHtml)
+	_, err := w.Write(statics.IndexHtmlFile)
+	if err != nil {
+		http.Error(w, "Error writing data", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
+	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
+	staticFile, ok := statics.StaticFileMap[pk]
+	if !ok {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", staticFile.ContentType)
+	_, err := w.Write(staticFile.File)
 	if err != nil {
 		http.Error(w, "Error writing data", http.StatusInternalServerError)
 		return
@@ -49,6 +61,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("request panic:", err)
+			debug.PrintStack()
 		}
 	}()
 	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
@@ -68,17 +81,9 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send all segments
-	for i, segment := range zone.Segments {
-		data := ToSegmentResponse(zone.ZoneNo, i, znsmemory.UnknownSegment, segment.ValidMap)
-		if ok = sendSegment(w, flusher, data); !ok {
-			return
-		}
-	}
+	// write goroutine
 	ctx, cancel := context.WithCancel(r.Context())
 	respBuf := respbuffer.New(ctx)
-
-	// write goroutine
 	go func() {
 		defer func() {
 			// sometimes flusher.Flush() panics
@@ -99,6 +104,17 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// send all segments
+	segments := make([]Segment, len(zone.Segments))
+	for i, segment := range zone.Segments {
+		segments[i] = Segment{
+			SegmentNo: i,
+			Map:       segment.ValidMap,
+		}
+	}
+	data := ToZoneResponse(zone.ZoneNo, znsmemory.UnknownSegment, segments)
+	respBuf.Push(data.Serialize())
+
 	// subscribe zone updates
 	sub := s.znsMemory.Subscribe()
 	defer s.znsMemory.UnSubscribe(sub)
@@ -106,7 +122,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	needUpdateSegment := make(map[int]struct{})
 	lastSegmentType := znsmemory.UnknownSegment
 
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(200 * time.Millisecond)
 	go func() {
 		<-ctx.Done()
 		ticker.Stop()
@@ -138,38 +154,28 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 				// last update is more than 500ms
 				lastUpdateZone[updatedZone] = now
 				// notice only zone number
-				data := ToSegmentResponse(update.ZoneNo, 0, update.SegmentType, nil)
+				data = ToZoneResponse(update.ZoneNo, update.SegmentType, nil)
 				respBuf.Push(data.Serialize())
 				continue
 			}
 		case <-ticker.C:
+			segments = make([]Segment, 0, len(needUpdateSegment))
 			for segmentNo := range needUpdateSegment {
-				segments, err := s.znsMemory.GetSegment(currentZoneNo, segmentNo)
+				seg, err := s.znsMemory.GetSegment(currentZoneNo, segmentNo)
 				if err != nil {
 					fmt.Println("Error getting segment", err)
 					continue
 				}
-				data := ToSegmentResponse(currentZoneNo, segmentNo, lastSegmentType, segments.ValidMap)
-				respBuf.Push(data.Serialize())
+				segments = append(segments, Segment{
+					SegmentNo: segmentNo,
+					Map:       seg.ValidMap,
+				})
 				delete(needUpdateSegment, segmentNo)
 			}
+			data = ToZoneResponse(currentZoneNo, lastSegmentType, segments)
+			respBuf.Push(data.Serialize())
 		}
 	}
-}
-
-func sendSegment(w http.ResponseWriter, flusher http.Flusher, resp SegmentResponse) bool {
-	buf := bytes.NewBuffer(nil)
-	if err := json.NewEncoder(buf).Encode(resp); err != nil {
-		fmt.Println("Error serializing segment", err)
-		return true
-	}
-	_, err := w.Write(buf.Bytes())
-	if err != nil {
-		http.Error(w, "Error writing data", http.StatusInternalServerError)
-		return false
-	}
-	flusher.Flush()
-	return true
 }
 
 func installGracefulShutdown(ctx context.Context, server *http.Server) {
@@ -191,6 +197,7 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 	handler.HandleFunc("/zone/", a.htmlHandler)
 	handler.HandleFunc("/api/zone/info", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
+	handler.HandleFunc("/static/", a.staticsHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: handler,
