@@ -7,20 +7,29 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
 #include "f2fszonetracer.skel.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 int nr_zones;
 int segment_size = 2; // 2 MiB
 int zone_size;
 int zone_blocks;
+int f2fs_main_blkaddr;
 int zone_start_blkaddr;
 int zone_segno_offset;
+
+/**
+ * Segment number tracing
+ * directly updated from bpf event
+ */
+int segno_min = 0x7fffffff;
+int segno_max = 0x80000000;
 
 unsigned int buf[3];
 
@@ -37,6 +46,7 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 static volatile sig_atomic_t stop;
 
 static void sig_int(int signo) {
+    fprintf(stderr, "signal received: %d\n", signo);
     stop = 1;
 }
 
@@ -54,6 +64,14 @@ void bump_memlock_rlimit(void) {
 
 int handle_event(void *ctx, void *data, size_t data_sz) {
     const struct event *e = data;
+
+    if (e->segno < segno_min) {
+        segno_min = e->segno;
+    }
+
+    if (e->segno > segno_max) {
+        segno_max = e->segno;
+    }
 
     int calculated_segno = e->segno - zone_segno_offset;
     if (calculated_segno < 0) {
@@ -79,7 +97,7 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 
     snprintf(cmd, sizeof(cmd), "cat /sys/block/%s/queue/%s", device_path, filename);
     if (DEBUG)
-        printf("debug: cmd=%s\n", cmd);
+        fprintf(stderr, "debug: cmd=%s\n", cmd);
 
     proc = popen(cmd, "r");
 
@@ -90,7 +108,7 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 
     if (fscanf(proc, "%d", &value) == 1) { /* read/validate value */
         if (DEBUG)
-            printf("debug: value: %d\n", value);
+            fprintf(stderr, "debug: value: %d\n", value);
         pclose(proc);
         return value;
     }
@@ -101,22 +119,43 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        printf("Usage: sudo %s <device_name> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 65536\n", argv[0], argv[0]);
+    if (argc != 4) {
+        printf("Usage: sudo %s <device_name> <f2fs_main_blkaddr> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 32768 65536\n", argv[0], argv[0]);
         return 1;
     }
     struct ring_buffer *rb = NULL;
     struct f2fszonetracer_bpf *skel;
     int err;
 
+    struct sigaction sa;
+    sa.sa_handler = sig_int;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    for (int signum = 1; signum < 31; signum++) {
+        if (signum == SIGSTOP || signum == SIGKILL || signum == SIGCHLD) {
+            continue;
+        }
+        if (sigaction(signum, &sa, NULL) == -1) {
+            printf("signo %d %d", signum, NSIG);
+            perror("sigaction");
+            return 1;
+        }
+    }
+
     nr_zones = read_sysfs_device_queue(argv[1], "nr_zones");
     zone_blocks = read_sysfs_device_queue(argv[1], "chunk_sectors") / 8;
-    zone_size = zone_blocks * 4 / 1024;           // MiB
-    zone_start_blkaddr = atoi(argv[2]);           // zoned start block address
-    zone_segno_offset = zone_start_blkaddr / 512; // total amount of regular block device segments
+    zone_size = zone_blocks * 4 / 1024;                                 // MiB
+    f2fs_main_blkaddr = atoi(argv[2]);                                  // f2fs main block address
+    zone_start_blkaddr = atoi(argv[3]);                                 // zoned start block address
+    zone_segno_offset = (zone_start_blkaddr - f2fs_main_blkaddr) / 512; // total amount of regular block device segments
+
+    if (DEBUG) {
+        fprintf(stderr, "zone_segno_offset %d\n", zone_segno_offset);
+    }
 
     if (DEBUG)
-        printf("debug: nr_zones=%d zone_blocks=%d\n", nr_zones, zone_blocks);
+        fprintf(stderr, "debug: nr_zones=%d zone_blocks=%d\n", nr_zones, zone_blocks);
 
     if (nr_zones < 0 || zone_blocks < 0) {
         printf("error: failed to read sysfs\n");
@@ -132,7 +171,7 @@ int main(int argc, char **argv) {
     /* Bump RLIMIT_MEMLOCK to create BPF maps */
     bump_memlock_rlimit();
 
-    if (signal(SIGINT, sig_int) == SIG_ERR) {
+    if (signal(SIGPIPE, sig_int) == SIG_ERR) {
         fprintf(stderr, "can't set signal handler: %s\n", strerror(errno));
         goto cleanup;
     }
@@ -167,12 +206,13 @@ int main(int argc, char **argv) {
             break;
         }
         if (err < 0) {
-            printf("Error consuming ring buffer: %d\n", err);
+            fprintf(stderr, "Error consuming ring buffer: %d\n", err);
             break;
         }
     }
 
 cleanup:
+    fprintf(stderr, "segno min: %d, max: %d\n", segno_min, segno_max);
     ring_buffer__free(rb);
     f2fszonetracer_bpf__destroy(skel);
     return -err;
