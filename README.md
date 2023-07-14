@@ -147,4 +147,4 @@ Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/ping
     ```
 
 # License
-#TODO
+BSD 2-Clause License
