@@ -72,18 +72,16 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 6. Do some operations on the F2FS filesystem mountpoint.
 
-    You can do some operations on the F2FS filesystem. For example, you can create a dummy file, read the file, and delete the file.
+    You can do some operations on the F2FS filesystem. For example, you can use our pre-defined fio jobfile.
 
     ```bash
-        cd /mnt/f2fs
-        dd if=/dev/urandom of=dummy bs=1M count=256
-        cat dummy > /dev/null
-        rm dummy
+        sudo apt -y install fio
+        sudo fio ./job.fio
     ```
 
     Then you can see the trace data in the viewer.
 
-    ![viewer](./docs/viewer.png)
+    ![viewer](./assets/viewer.png)
 
 
 # How to Build
