@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -20,7 +20,7 @@ cd $ROOT
 if [ ! -f $BLKADDR_FILE ]
 then
     echo "blkaddr file is not found. Please run ./scripts/mount_f2fs.sh"
-    exit 1
+    exit
 fi
 
 MAIN_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $1}')
