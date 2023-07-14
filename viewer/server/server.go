@@ -159,6 +159,9 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 		case <-ticker.C:
+			if len(needUpdateSegment) == 0 {
+				continue
+			}
 			segments = make([]Segment, 0, len(needUpdateSegment))
 			for segmentNo := range needUpdateSegment {
 				seg, err := s.znsMemory.GetSegment(currentZoneNo, segmentNo)
