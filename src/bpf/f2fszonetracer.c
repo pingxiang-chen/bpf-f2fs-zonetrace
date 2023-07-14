@@ -24,13 +24,6 @@ int f2fs_main_blkaddr;
 int zone_start_blkaddr;
 int zone_segno_offset;
 
-/**
- * Segment number tracing
- * directly updated from bpf event
- */
-int segno_min = 0x7fffffff;
-int segno_max = 0x80000000;
-
 unsigned int buf[3];
 
 struct event {
@@ -64,14 +57,6 @@ void bump_memlock_rlimit(void) {
 
 int handle_event(void *ctx, void *data, size_t data_sz) {
     const struct event *e = data;
-
-    if (e->segno < segno_min) {
-        segno_min = e->segno;
-    }
-
-    if (e->segno > segno_max) {
-        segno_max = e->segno;
-    }
 
     int calculated_segno = e->segno - zone_segno_offset;
     if (calculated_segno < 0) {
@@ -212,7 +197,6 @@ int main(int argc, char **argv) {
     }
 
 cleanup:
-    fprintf(stderr, "segno min: %d, max: %d\n", segno_min, segno_max);
     ring_buffer__free(rb);
     f2fszonetracer_bpf__destroy(skel);
     return -err;
