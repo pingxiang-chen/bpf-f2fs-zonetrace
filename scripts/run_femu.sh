@@ -2,7 +2,7 @@
 set -e
 
 # FEMU Image directory
-IMAGE_DIR=$HOME/image
+IMAGE_DIR=$HOME/images
 # Virtual machine disk image
 IMAGE_FILE=debian.qcow2
 
