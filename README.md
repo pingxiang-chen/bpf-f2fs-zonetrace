@@ -39,7 +39,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 3. Clone the repo in FEMU
 
     ```bash
-        cd $(HOME)
+        cd $HOME
         git clone https://github.com/pingxiang-chen/bpf-f2fs-zonetrace.git
     ```
 
@@ -48,7 +48,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     > ⚠️ WARNING: This script will format the ZNS device `/dev/nvme0n1` with F2FS filesystem. Please make sure that you have backed up the data on the ZNS device.
 
     ```bash
-        cd $(HOME)/bpf-f2fs-zonetrace
+        cd $HOME/bpf-f2fs-zonetrace
         ./scripts/mount_and_tracing.sh
     ```
 
@@ -108,7 +108,7 @@ You also need to change the `IMAGE_DIR` and `IMAGE_FILE` variable properly in `r
 2. Build our modified f2fs-tools
 
     ```bash
-        cd $(HOME)/bpf-f2fs-zonetrace/f2fs-tools
+        cd $HOME/bpf-f2fs-zonetrace/f2fs-tools
         ./autogen.sh
         ./configure
         make
@@ -125,14 +125,14 @@ Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/ping
 1. Dump the BTF of f2fs from the kernel to the BPF program source code directory.
 
     ```bash
-        cd $(HOME)/bpf-f2fs-zonetrace/bpftool
+        cd $HOME/bpf-f2fs-zonetrace/bpftool
         bpftool btf dump file /sys/kernel/btf/f2fs format c > $(HOME)/bpf-f2fs-zonetrace/src/bpf/f2fs.h
     ```
 
 2. Build the tracer
 
     ```bash
-        cd $(HOME)/bpf-f2fs-zonetrace/src/bpf
+        cd $HOME/bpf-f2fs-zonetrace/src/bpf
         make -j
     ```
 
@@ -142,7 +142,7 @@ Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/ping
 
     and then build the viewer
     ```bash
-        cd $(HOME)/bpf-f2fs-zonetrace/src/viewer
+        cd $HOME/bpf-f2fs-zonetrace/src/viewer
         go build
     ```
 
