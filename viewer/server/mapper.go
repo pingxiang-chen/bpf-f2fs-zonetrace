@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func ToZoneInfoResponse(info znsmemory.ZoneInfo) ZoneInfoResponse {
+func ToZoneInfoResponse(info znsmemory.ZoneInfo, lastSegmentType znsmemory.SegmentType) ZoneInfoResponse {
 	return ZoneInfoResponse{
 		TotalZone:               info.TotalZone,
 		BlockPerSegment:         info.BlockPerSegment,
@@ -13,6 +13,7 @@ func ToZoneInfoResponse(info znsmemory.ZoneInfo) ZoneInfoResponse {
 		AvailableBlockPerZone:   info.AvailableBlockPerZone,
 		TotalSegmentPerZone:     info.TotalSegmentPerZone,
 		AvailableSegmentPerZone: info.AvailableSegmentPerZone,
+		LastSegmentType:         int(lastSegmentType),
 	}
 }
 

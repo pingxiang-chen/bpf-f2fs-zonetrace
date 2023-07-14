@@ -5,7 +5,9 @@ const SegmentSize = 512
 type SegmentType int
 
 const (
-	UnknownSegment SegmentType = iota - 1 // gray
+	NotChanged SegmentType = iota - 2 // no color
+
+	UnknownSegment // gray
 
 	// HotDataSegment is type for frequently accessed data segments
 	HotDataSegment // red
@@ -59,8 +61,9 @@ type ZoneInfo struct {
 }
 
 type Zone struct {
-	ZoneNo   int
-	Segments []Segment
+	ZoneNo          int
+	Segments        []Segment
+	LastSegmentType SegmentType
 }
 
 type ZonedStorage struct {
