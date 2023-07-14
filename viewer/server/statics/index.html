@@ -157,6 +157,8 @@
         const zoneTotalSize = info.total_zone;
         let xLength = 15;
         let yLength = Math.ceil(zoneTotalSize / xLength);
+        xLength = Math.ceil(zoneTotalSize / yLength);
+
         if (xLength > yLength) {
             [xLength, yLength] = [yLength, xLength]
         }
@@ -281,7 +283,6 @@
         const lastUpdateZone = {};
 
         async function blinkZone(zoneNo, segmentType) {
-            console.log(segmentType)
             const colors = ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'];
             let color = colors[segmentType] || 'gray';
             const _now = Date.now();
