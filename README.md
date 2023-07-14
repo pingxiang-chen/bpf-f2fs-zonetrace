@@ -22,7 +22,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     ```
 
 2. Run scrpit `./run_femu.sh` to build and run FEMU.
-    If you build FEMU for the first time, it will take a long time to build qemu and FEMU.
+    If you build FEMU for the first time, it will take a long time to build qemu and FEMU. (FEMU repo: [link](https://github.com/vtess/FEMU))
 
     ```bash
         ./run_femu.sh
