@@ -1,6 +1,6 @@
 # bpf-f2fs-zonetrace
 
-#TODO
+ZoneTrace is an eBPF-based program that can visualize the space management of each zone on F2FS on ZNS SSDs in real-time without any kernel modification. We believe ZoneTrace can help users analyze F2FS with ease and open up several interesting research topics on ZNS SSDs.
 
 # Host Machine Requirements
 
