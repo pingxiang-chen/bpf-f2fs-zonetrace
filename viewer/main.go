@@ -27,8 +27,6 @@ func newSignalContext() context.Context {
 }
 
 func main() {
-	f, _ := os.Open("input.log")
-	os.Stdin = f
 	r := bufio.NewReaderSize(os.Stdin, 4096)
 	zoneInfo, err := receiver.ReadZoneInfo(r)
 	if err != nil {
