@@ -47,7 +47,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 4. Mount the ZNS device with the F2FS filesystem and run the tracer & viewer
     
-    > ⚠️ WARNING: This script will format the ZNS device `/dev/nvme0n1` with the F2FS filesystem. Please make sure that you have backed up the data on the ZNS device.
+    > ⚠️ WARNING: The script `./scripts/mount_f2fs` will format the ZNS device `/dev/nvme0n1` with the F2FS filesystem. Please make sure that you have backed up the data on the ZNS device.
 
     ```bash
         cd $HOME/bpf-f2fs-zonetrace
