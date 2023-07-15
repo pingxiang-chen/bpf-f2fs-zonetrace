@@ -104,7 +104,7 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
+    if (argc != 5) {
         printf("Usage: sudo %s <device_name> <mount> <f2fs_main_blkaddr> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 32768 65536\n", argv[0], argv[0]);
         return 1;
     }
