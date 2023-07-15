@@ -117,15 +117,16 @@ int main(int argc, char **argv) {
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
 
-    for (int signum = 1; signum < 31; signum++) {
-        if (signum == SIGSTOP || signum == SIGKILL || signum == SIGCHLD) {
-            continue;
-        }
-        if (sigaction(signum, &sa, NULL) == -1) {
-            printf("signo %d %d", signum, NSIG);
-            perror("sigaction");
-            return 1;
-        }
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        printf("signo %d ", SIGINT);
+        perror("sigaction");
+        return 1;
+    }
+
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        printf("signo %d ", SIGTERM);
+        perror("sigaction");
+        return 1;
     }
 
     nr_zones = read_sysfs_device_queue(argv[1], "nr_zones");
