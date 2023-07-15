@@ -4,7 +4,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 # Quick Start
 
-> ⚠️ This project is still in the early stage of development. If you have real ZNS SSDs and want to try ZoneTrace, please contact us. We will help you to set up the environment and test ZoneTrace. For now, we only tested on the FEMU environment.
+> ⚠️ This project is still in the early stage of development. Please contact us if you have real ZNS SSDs and want to try ZoneTrace. We will help you to set up the environment and test ZoneTrace. For now, we only tested on the FEMU environment.
 
 ## Host Machine Requirements
 
@@ -12,9 +12,9 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 - 8+ cores, 12GB+ RAM (for emulating 4GB NVMe ZNS SSDs)
 - 20GB+ disk space
 
-1. Prepare FEMU environment
+1. Prepare the FEMU environment
 
-    We provide a pre-built debian 12 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EbSON0cUewhFgugceuFiAAQBRpy4hm4x1oZP0uZie6_CgA?e=qRUw8a).
+    We provide a pre-built Debian 12 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EbSON0cUewhFgugceuFiAAQBRpy4hm4x1oZP0uZie6_CgA?e=qRUw8a).
 
     and then put the image into the `$HOME/images`.
 
@@ -23,7 +23,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
         mv debian.qcow2 $HOME/images
     ```
 
-2. Run scrpit `./run_femu.sh` to build and run FEMU.
+2. Run script `./run_femu.sh` to build and run FEMU.
     If you build FEMU for the first time, it will take a long time to build qemu and FEMU. (FEMU repo: [link](https://github.com/vtess/FEMU))
 
     ```bash
@@ -36,7 +36,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
         ssh -p 8080 femu@localhost
     ```
 
-   > ⚠️ All quickstart guide below assumes that you are in the FEMU environment with our pre-built debian 12 image. If you use your own VM image, you need to install the dependencies and build the tools on your own. See [How to Build](#how-to-build) for more details.
+   > ⚠️ All quickstart guide below assumes that you are in the FEMU environment with our pre-built Debian 12 image. If you use your own VM image, you need to install the dependencies and build the tools on your own. See [How to Build](#how-to-build) for more details.
 
 3. Clone the repo in FEMU
 
@@ -45,9 +45,9 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
         git clone https://github.com/pingxiang-chen/bpf-f2fs-zonetrace.git
     ```
 
-4. Mount the ZNS device with F2FS filesystem and run the tracer & viewer
+4. Mount the ZNS device with the F2FS filesystem and run the tracer & viewer
     
-    > ⚠️ WARNING: This script will format the ZNS device `/dev/nvme0n1` with F2FS filesystem. Please make sure that you have backed up the data on the ZNS device.
+    > ⚠️ WARNING: This script will format the ZNS device `/dev/nvme0n1` with the F2FS filesystem. Please make sure that you have backed up the data on the ZNS device.
 
     ```bash
         cd $HOME/bpf-f2fs-zonetrace
@@ -71,7 +71,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     
     http://localhost:9090
 
-6. Do some operations on the F2FS filesystem mountpoint.
+6. Do some operations on the F2FS filesystem mount point.
 
     You can do some operations on the F2FS filesystem. For example, you can use our pre-defined fio jobfile.
 
@@ -94,7 +94,7 @@ You can use your own VM image. But you need to satisfy the following VM image re
 - [NVME ZNS SSD Support](https://zonedstorage.io/docs/linux/config) (Linux Kernel built with `CONFIG_BLK_DEV_ZONED=y` and `CONFIG_NVME_CORE` option)
 - [FEMU ZNS requirements](https://github.com/vtess/FEMU#installation) (Linux kernel 5.10+ for emulating ZNS device with FEMU)
 
-You also need to change the `IMAGE_DIR` and `IMAGE_FILE` variable properly in `run_femu.sh` to your own VM image path.
+You also need to change the `IMAGE_DIR` and `IMAGE_FILE` variables properly in `run_femu.sh` to your own VM image path.
 
 
 ## Build f2fs-tools on FEMU
@@ -119,7 +119,7 @@ You also need to change the `IMAGE_DIR` and `IMAGE_FILE` variable properly in `r
 
 ## Build bpftool
 
-Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/pingxiang-chen/bpf-f2fs-zonetrace/blob/main/bpftool/README.md) to install the bpftool. It is same as the original bpftool, pinned to a version 7.2.
+Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/pingxiang-chen/bpf-f2fs-zonetrace/blob/main/bpftool/README.md) to install the bpftool. It is the same as the original bpftool, pinned to version 7.2.
 
 ## Build the tracer and viewer
 
