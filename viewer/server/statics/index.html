@@ -140,7 +140,12 @@
 
         function drawChart(row, y, segmentType) {
             row.forEach((d, i) => {
-                const color = getSegmentTypeColor(segmentType);
+                let color = "white";
+                if (d === 1) {
+                    color = getSegmentTypeColor(segmentType);
+                } else if (d === -1) {
+                    color = "white";
+                }
                 if (cellColorMap[y][i] === color) {
                     return;
                 }
