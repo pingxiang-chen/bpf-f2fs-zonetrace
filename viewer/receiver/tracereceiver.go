@@ -46,17 +46,17 @@ func (t *traceReceiver) readSitEntryUpdate(r *bufio.Reader) (*znsmemory.SitEntry
 	var err error
 	intBuf := make([]byte, 4)
 
-	if _, err = r.Read(intBuf); err != nil {
+	if _, err = io.ReadFull(r, intBuf); err != nil {
 		return nil, fmt.Errorf("read segmentNum: %w", err)
 	}
 	segmentNum := int(binary.LittleEndian.Uint32(intBuf))
 
-	if _, err = r.Read(intBuf); err != nil {
+	if _, err = io.ReadFull(r, intBuf); err != nil {
 		return nil, fmt.Errorf("read curZone: %w", err)
 	}
 	curZone := int(binary.LittleEndian.Uint32(intBuf))
 
-	if _, err = r.Read(intBuf); err != nil {
+	if _, err = io.ReadFull(r, intBuf); err != nil {
 		return nil, fmt.Errorf("read segmentType: %w", err)
 	}
 	segmentType := znsmemory.SegmentType(binary.LittleEndian.Uint32(intBuf))
