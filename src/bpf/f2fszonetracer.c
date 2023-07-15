@@ -14,7 +14,7 @@
 
 #include "f2fszonetracer.skel.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 int nr_zones;
 int segment_size = 2; // 2 MiB
@@ -151,7 +151,8 @@ int main(int argc, char **argv) {
     fflush(stdout);
 
     /* Set up libbpf errors and debug info callback */
-    libbpf_set_print(libbpf_print_fn);
+    if (DEBUG)
+        libbpf_set_print(libbpf_print_fn);
 
     /* Bump RLIMIT_MEMLOCK to create BPF maps */
     bump_memlock_rlimit();
