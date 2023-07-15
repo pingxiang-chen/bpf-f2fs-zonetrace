@@ -105,7 +105,7 @@ int read_sysfs_device_queue(const char *device_path, const char *filename) {
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        printf("Usage: sudo %s <device_name> <f2fs_main_blkaddr> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 32768 65536\n", argv[0], argv[0]);
+        printf("Usage: sudo %s <device_name> <mount> <f2fs_main_blkaddr> <zoned_start_blkaddr>\nex) sudo %s nvme0n1 32768 65536\n", argv[0], argv[0]);
         return 1;
     }
     struct ring_buffer *rb = NULL;
@@ -131,8 +131,8 @@ int main(int argc, char **argv) {
     nr_zones = read_sysfs_device_queue(argv[1], "nr_zones");
     zone_blocks = read_sysfs_device_queue(argv[1], "chunk_sectors") / 8;
     zone_size = zone_blocks * 4 / 1024;                                 // MiB
-    f2fs_main_blkaddr = atoi(argv[2]);                                  // f2fs main block address
-    zone_start_blkaddr = atoi(argv[3]);                                 // zoned start block address
+    f2fs_main_blkaddr = atoi(argv[3]);                                  // f2fs main block address
+    zone_start_blkaddr = atoi(argv[4]);                                 // zoned start block address
     zone_segno_offset = (zone_start_blkaddr - f2fs_main_blkaddr) / 512; // total amount of regular block device segments
 
     if (DEBUG) {
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("info: device=%s total_zone=%d zone_blocks=%d\n", argv[1], nr_zones, zone_blocks);
+    printf("info: mount=%s total_zone=%d zone_blocks=%d\n", argv[2], nr_zones, zone_blocks);
     fflush(stdout);
 
     /* Set up libbpf errors and debug info callback */
