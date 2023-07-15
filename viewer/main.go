@@ -27,16 +27,26 @@ func newSignalContext() context.Context {
 }
 
 func main() {
-	r := bufio.NewReaderSize(os.Stdin, 4096)
-	zoneInfo, err := receiver.ReadZoneInfo(r)
+	stdioReader := bufio.NewReaderSize(os.Stdin, 4096)
+	zoneInfo, err := receiver.ReadZoneInfo(stdioReader)
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
+	}
+
+	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.DeviceName)
+	procFile, err := os.Open(procPath)
+	if err != nil {
+		fmt.Printf("open %s: %v\n", procPath, err)
 	}
 
 	port := 9090
 	ctx := newSignalContext()
 	m := znsmemory.New(ctx, *zoneInfo)
-	receiver.NewTraceReceiver(m).StartReceive(ctx, r)
+	receiver.NewTraceReceiver(m).StartReceive(ctx, stdioReader)
+	if procFile != nil {
+		procReader := bufio.NewReaderSize(procFile, 4096)
+		receiver.NewProcReceiver(m).StartReceive(ctx, procReader)
+	}
 	srv := server.New(ctx, m, port)
 	fmt.Printf("======== Running on http://0.0.0.0:%d ========\n", port)
 	err = srv.ListenAndServe()
