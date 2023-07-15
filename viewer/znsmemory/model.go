@@ -52,6 +52,7 @@ type SitEntryUpdate struct {
 }
 
 type ZoneInfo struct {
+	MountPath               string
 	TotalZone               int
 	BlockPerSegment         int
 	TotalBlockPerZone       int
