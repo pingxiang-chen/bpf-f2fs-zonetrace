@@ -4,7 +4,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 # Quick Start
 
-> ⚠️ This project is still in the early stage of development. If you have a real ZNS SSDs and want to try ZoneTrace, please contact us. We will help you to set up the environment and test ZoneTrace. For now, we only tested on the FEMU environment.
+> ⚠️ This project is still in the early stage of development. If you have real ZNS SSDs and want to try ZoneTrace, please contact us. We will help you to set up the environment and test ZoneTrace. For now, we only tested on the FEMU environment.
 
 ## Host Machine Requirements
 
@@ -59,7 +59,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 5. Open the viewer in your browser
 
-    When you run the `./scripts/mount_and_tracing.sh`, you can see the `======== Running on http://0.0.0.0:9090 ========` message in the terminal.
+    When you run the `./scripts/run_tracer.sh`, you can see the `======== Running on http://0.0.0.0:9090 ========` message in the terminal.
     
     Because the viewer is running in FEMU, you need to forward the port 9090 to the host machine. You can use the following command.
 
