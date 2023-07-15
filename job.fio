@@ -3,7 +3,7 @@ thinktime=1ms
 ioengine=sync
 rw=randwrite
 bs=512k
-size=130M
+size=15M
 time_based=1
 runtime=30
 
