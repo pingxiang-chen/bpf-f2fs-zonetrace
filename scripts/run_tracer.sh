@@ -27,4 +27,4 @@ MAIN_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $1}')
 START_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $2}')
 LOOP_DEV=$(cat $BLKADDR_FILE | awk '{print $3}')
 
-./src/bpf/f2fszonetracer nvme0n1 $LOOP_DEV $MAIN_BLKADDR $START_BLKADDR | ./viewer/viewer
+./src/bpf/f2fszonetracer nvme0n1 loop$LOOP_DEV $MAIN_BLKADDR $START_BLKADDR | ./viewer/viewer
