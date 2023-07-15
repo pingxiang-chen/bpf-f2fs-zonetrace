@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("info: total_zone=%d zone_blocks=%d\n", nr_zones, zone_blocks);
+    printf("info: device=%s total_zone=%d zone_blocks=%d\n", argv[1], nr_zones, zone_blocks);
     fflush(stdout);
 
     /* Set up libbpf errors and debug info callback */
