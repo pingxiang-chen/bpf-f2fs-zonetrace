@@ -138,14 +138,9 @@
             return Array.from({length: canvasWidth});
         });
 
-        function drawChart(row, y) {
+        function drawChart(row, y, segmentType) {
             row.forEach((d, i) => {
-                let color = "white";
-                if (d === 1) {
-                    color = "green";
-                } else if (d === -1) {
-                    color = "white";
-                }
+                const color = getSegmentTypeColor(segmentType);
                 if (cellColorMap[y][i] === color) {
                     return;
                 }
@@ -364,7 +359,7 @@
                         }
                         const ping = Date.now() - zone.time;
                         console.log(`received ${segment.segmentNo}, ping: ${ping}ms`)
-                        drawChart(row, segment.segmentNo);
+                        drawChart(row, segment.segmentNo, segment.segmentType);
                     })
                 }
             }
