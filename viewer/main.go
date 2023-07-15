@@ -5,12 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/receiver"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 func newSignalContext() context.Context {
@@ -25,8 +27,10 @@ func newSignalContext() context.Context {
 }
 
 func main() {
+	f, _ := os.Open("input.log")
+	os.Stdin = f
 	r := bufio.NewReaderSize(os.Stdin, 4096)
-	zoneInfo, err := znsmemory.ReadZoneInfo(r)
+	zoneInfo, err := receiver.ReadZoneInfo(r)
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
 	}
@@ -34,7 +38,7 @@ func main() {
 	port := 9090
 	ctx := newSignalContext()
 	m := znsmemory.New(ctx, *zoneInfo)
-	m.StartReceiveTrace(ctx, r)
+	receiver.NewTraceReceiver(m).StartReceive(ctx, r)
 	srv := server.New(ctx, m, port)
 	fmt.Printf("======== Running on http://0.0.0.0:%d ========\n", port)
 	err = srv.ListenAndServe()

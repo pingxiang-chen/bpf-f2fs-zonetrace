@@ -45,10 +45,10 @@ type SegmentId struct {
 }
 
 type SitEntryUpdate struct {
-	SegmentNo   int
-	ZoneNo      int
-	SegmentType SegmentType
-	ValidMap    ValidMap
+	SegmentFullNo int
+	ZoneNo        int
+	SegmentType   SegmentType
+	ValidMap      ValidMap
 }
 
 type ZoneInfo struct {

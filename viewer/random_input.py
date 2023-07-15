@@ -15,7 +15,7 @@ if __name__ == '__main__':
     buf = io.BytesIO()
     seg_types = [random.randint(0, 5) for i in range(905)]
     while True:
-        seg_no = random.randint(0, 1023)
+        seg_no = random.randint(0, 926719)
         cur_zone = random.randint(0, 904)
         seg_type = seg_types[cur_zone]
         buf.write(seg_no.to_bytes(4, 'little'))

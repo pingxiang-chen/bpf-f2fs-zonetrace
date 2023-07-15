@@ -1,15 +1,18 @@
-package znsmemory
+package receiver
 
 import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
+
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
+const SegmentSize = znsmemory.SegmentSize
 const validMapSize = SegmentSize / 8
 
-func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
+func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	line, err := r.ReadString('\n')
 	if err != nil {
 		return nil, fmt.Errorf("read zone info: %w", err)
@@ -20,7 +23,7 @@ func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
 		return nil, fmt.Errorf("parseZoneInfo: %w", err)
 	}
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
-	return &ZoneInfo{
+	return &znsmemory.ZoneInfo{
 		TotalZone:               totalZone,
 		BlockPerSegment:         SegmentSize,
 		TotalBlockPerZone:       zoneBlocks,
@@ -30,7 +33,7 @@ func ReadZoneInfo(r *bufio.Reader) (*ZoneInfo, error) {
 	}, nil
 }
 
-func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
+func ReadSitEntryUpdate(r *bufio.Reader) (*znsmemory.SitEntryUpdate, error) {
 	var err error
 	intBuf := make([]byte, 4)
 
@@ -47,9 +50,9 @@ func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
 	if _, err = r.Read(intBuf); err != nil {
 		return nil, fmt.Errorf("read segmentType: %w", err)
 	}
-	segmentType := SegmentType(binary.LittleEndian.Uint32(intBuf))
+	segmentType := znsmemory.SegmentType(binary.LittleEndian.Uint32(intBuf))
 	if !segmentType.IsValid() {
-		segmentType = UnknownSegment
+		segmentType = znsmemory.UnknownSegment
 	}
 
 	validMap := make([]byte, validMapSize)
@@ -57,10 +60,10 @@ func ReadSitEntryUpdate(r *bufio.Reader) (*SitEntryUpdate, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read update_sit_entry: %w", err)
 	}
-	return &SitEntryUpdate{
-		ZoneNo:      curZone,
-		SegmentNo:   segmentNum,
-		ValidMap:    validMap,
-		SegmentType: segmentType,
+	return &znsmemory.SitEntryUpdate{
+		ZoneNo:        curZone,
+		SegmentFullNo: segmentNum,
+		ValidMap:      validMap,
+		SegmentType:   segmentType,
 	}, nil
 }
