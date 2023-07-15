@@ -33,7 +33,7 @@ func main() {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
 	}
 
-	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.DeviceName)
+	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.MountPath)
 	procFile, err := os.Open(procPath)
 	if err != nil {
 		fmt.Printf("open %s: %v\n", procPath, err)

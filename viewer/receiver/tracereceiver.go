@@ -83,14 +83,14 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 		return nil, fmt.Errorf("read zone info: %w", err)
 	}
 	var totalZone, zoneBlocks int
-	deviceName := ""
-	_, err = fmt.Sscanf(line, "info: device=%s total_zone=%d zone_blocks=%d", &deviceName, &totalZone, &zoneBlocks)
+	mountPath := ""
+	_, err = fmt.Sscanf(line, "info: mount=%s total_zone=%d zone_blocks=%d", &mountPath, &totalZone, &zoneBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("parseZoneInfo: %w", err)
 	}
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 	return &znsmemory.ZoneInfo{
-		DeviceName:              deviceName,
+		MountPath:               mountPath,
 		TotalZone:               totalZone,
 		BlockPerSegment:         SegmentSize,
 		TotalBlockPerZone:       zoneBlocks,

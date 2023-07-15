@@ -52,7 +52,7 @@ type SitEntryUpdate struct {
 }
 
 type ZoneInfo struct {
-	DeviceName              string
+	MountPath               string
 	TotalZone               int
 	BlockPerSegment         int
 	TotalBlockPerZone       int
