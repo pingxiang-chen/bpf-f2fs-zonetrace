@@ -94,7 +94,11 @@ func (m *memory) startEventLoop(ctx context.Context) {
 				if m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType != updateSitEntry.SegmentType {
 					m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = updateSitEntry.SegmentType
 				}
-				m.zns.Zones[updateSitEntry.ZoneNo].Segments[segmentNo].ValidMap = updateSitEntry.ValidMap
+
+				m.zns.Zones[updateSitEntry.ZoneNo].Segments[segmentNo] = Segment{
+					ValidMap:    updateSitEntry.ValidMap,
+					SegmentType: updateSitEntry.SegmentType,
+				}
 				func() {
 					m.subscriberMutex.RLock()
 					defer m.subscriberMutex.RUnlock()

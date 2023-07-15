@@ -342,8 +342,8 @@
                     }
                     buf = buf.slice(r.pos);
 
-                    if (zone.segmentType !== -2) {
-                        blinkZone(zone.zoneNo, zone.segmentType);
+                    if (zone.lastSegmentType !== -2) {
+                        blinkZone(zone.zoneNo, zone.lastSegmentType);
                     }
 
                     zone.segments.forEach((segment, _) => {

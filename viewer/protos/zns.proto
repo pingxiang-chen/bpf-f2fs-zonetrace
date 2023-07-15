@@ -5,6 +5,7 @@ option go_package = "github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos;
 message Segment {
   int32 segment_no = 1;
   bytes map = 2;
+  int32 segment_type = 3;
 }
 
 message SegmentResponse {
@@ -17,6 +18,6 @@ message ZoneResponse {
   int64 time = 1;
   int32 zone_no = 2;
   // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
-  int32 segment_type = 3;
+  int32 last_segment_type = 3;
   repeated Segment segments = 4;
 }

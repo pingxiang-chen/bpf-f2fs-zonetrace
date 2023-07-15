@@ -35,7 +35,8 @@ func (t SegmentType) IsValid() bool {
 type ValidMap []byte
 
 type Segment struct {
-	ValidMap ValidMap
+	ValidMap    ValidMap
+	SegmentType SegmentType
 }
 
 type SegmentId struct {

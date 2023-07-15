@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"google.golang.org/protobuf/encoding/protodelim"
+
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
-	"google.golang.org/protobuf/encoding/protodelim"
 )
 
 type ZoneInfoResponse struct {
@@ -28,28 +30,30 @@ func (z *ZoneInfoResponse) Serialize() []byte {
 }
 
 type Segment struct {
-	SegmentNo int    `json:"segment_no"`
-	Map       []byte `json:"map"`
+	SegmentNo   int    `json:"segment_no"`
+	SegmentType int    `json:"segment_type"`
+	Map         []byte `json:"map"`
 }
 
 type ZoneResponse struct {
-	Time        int64
-	ZoneNo      int
-	SegmentType int
-	Segments    []Segment
+	Time            int64
+	ZoneNo          int
+	LastSegmentType int
+	Segments        []Segment
 }
 
 func (z *ZoneResponse) Serialize() []byte {
 	p := &protos.ZoneResponse{
-		Time:        z.Time,
-		ZoneNo:      int32(z.ZoneNo),
-		SegmentType: int32(z.SegmentType),
-		Segments:    make([]*protos.Segment, len(z.Segments)),
+		Time:            z.Time,
+		ZoneNo:          int32(z.ZoneNo),
+		LastSegmentType: int32(z.LastSegmentType),
+		Segments:        make([]*protos.Segment, len(z.Segments)),
 	}
 	for i, segment := range z.Segments {
 		p.Segments[i] = &protos.Segment{
-			SegmentNo: int32(segment.SegmentNo),
-			Map:       segment.Map,
+			SegmentNo:   int32(segment.SegmentNo),
+			Map:         segment.Map,
+			SegmentType: int32(segment.SegmentType),
 		}
 	}
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))

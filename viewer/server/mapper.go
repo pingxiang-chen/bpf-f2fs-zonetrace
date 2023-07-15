@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 	"time"
+
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 func ToZoneInfoResponse(info znsmemory.ZoneInfo, lastSegmentType znsmemory.SegmentType) ZoneInfoResponse {
@@ -20,9 +21,9 @@ func ToZoneInfoResponse(info znsmemory.ZoneInfo, lastSegmentType znsmemory.Segme
 func ToZoneResponse(zoneNo int, segmentType znsmemory.SegmentType, segments []Segment) ZoneResponse {
 	t := time.Now().UnixNano() / int64(time.Millisecond) // unix time in ms
 	return ZoneResponse{
-		Time:        t,
-		ZoneNo:      zoneNo,
-		SegmentType: int(segmentType),
-		Segments:    segments,
+		Time:            t,
+		ZoneNo:          zoneNo,
+		LastSegmentType: int(segmentType),
+		Segments:        segments,
 	}
 }

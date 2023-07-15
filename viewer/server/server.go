@@ -4,14 +4,15 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server/statics"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 	"net/http"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server/statics"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 type api struct {
@@ -123,8 +124,9 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	segments := make([]Segment, len(zone.Segments))
 	for i, segment := range zone.Segments {
 		segments[i] = Segment{
-			SegmentNo: i,
-			Map:       segment.ValidMap,
+			SegmentNo:   i,
+			SegmentType: int(segment.SegmentType),
+			Map:         segment.ValidMap,
 		}
 	}
 	data := ToZoneResponse(zone.ZoneNo, znsmemory.NotChanged, segments)
@@ -175,8 +177,9 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				segments = append(segments, Segment{
-					SegmentNo: segmentNo,
-					Map:       seg.ValidMap,
+					SegmentNo:   segmentNo,
+					Map:         seg.ValidMap,
+					SegmentType: int(seg.SegmentType),
 				})
 				delete(needUpdateSegment, segmentNo)
 			}
