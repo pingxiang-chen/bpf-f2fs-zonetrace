@@ -36,7 +36,6 @@ fi
 mkdir -p $MOUNT_POINT
 umount -q $MOUNT_POINT
 mkfs.f2fs -d 1 -o $OVERPROVISIONING_SECTIONS -m -f -c /dev/nvme0n1 /dev/loop$LOOP_DEV_NUM | tee $MKFS_LOG_FILE
-cat $MKFS_LOG_FILE
 MAIN_BLKADDR=$(cat $MKFS_LOG_FILE | awk '/main_blkaddr/{print $NF}')
 START_BLKADDR=$(cat $MKFS_LOG_FILE | awk '/start_blkaddr/ {print $2}')
 echo "$MAIN_BLKADDR $START_BLKADDR" > $BLKADDR_FILE
