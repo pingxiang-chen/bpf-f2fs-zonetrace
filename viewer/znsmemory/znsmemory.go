@@ -1,11 +1,8 @@
 package znsmemory
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"sync"
 )
 
@@ -16,7 +13,6 @@ type ZNSMemory interface {
 	GetZoneInfo() *ZoneInfo
 	Subscribe() *Subscriber
 	UnSubscribe(sub *Subscriber)
-	StartReceiveTrace(ctx context.Context, r *bufio.Reader)
 }
 
 type Subscriber struct {
@@ -76,31 +72,8 @@ func (m *memory) UnSubscribe(sub *Subscriber) {
 	}
 }
 
-func (m *memory) StartReceiveTrace(ctx context.Context, r *bufio.Reader) {
-	if m.isReceiving {
-		panic("already receiving trace")
-	}
-	m.isReceiving = true
-	go func() {
-		for {
-			if ctx.Err() != nil {
-				return
-			}
-			u, err := ReadSitEntryUpdate(r)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					fmt.Println("input closed")
-					return
-				}
-				fmt.Printf("readSegment: %v\n", err)
-				continue
-			}
-			m.UpdateSegment(u)
-		}
-	}()
-}
-
 func (m *memory) startEventLoop(ctx context.Context) {
+	maxSegmentFullNo := m.zns.TotalSegmentPerZone * m.zns.TotalZone
 	go func() {
 		for {
 			select {
@@ -111,14 +84,17 @@ func (m *memory) startEventLoop(ctx context.Context) {
 					fmt.Printf("invalid zone no %d\n", updateSitEntry.ZoneNo)
 					continue
 				}
-				if updateSitEntry.SegmentNo < 0 || updateSitEntry.SegmentNo >= m.zns.TotalSegmentPerZone {
-					fmt.Printf("invalid segment no %d\n", updateSitEntry.SegmentNo)
+
+				if updateSitEntry.SegmentFullNo < 0 || maxSegmentFullNo < updateSitEntry.SegmentFullNo {
+					fmt.Printf("invalid segment full no %d\n", updateSitEntry.SegmentFullNo)
 					continue
 				}
+				segmentNo := updateSitEntry.SegmentFullNo % m.zns.TotalSegmentPerZone
+
 				if m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType != updateSitEntry.SegmentType {
 					m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = updateSitEntry.SegmentType
 				}
-				m.zns.Zones[updateSitEntry.ZoneNo].Segments[updateSitEntry.SegmentNo].ValidMap = updateSitEntry.ValidMap
+				m.zns.Zones[updateSitEntry.ZoneNo].Segments[segmentNo].ValidMap = updateSitEntry.ValidMap
 				func() {
 					m.subscriberMutex.RLock()
 					defer m.subscriberMutex.RUnlock()
@@ -127,7 +103,7 @@ func (m *memory) startEventLoop(ctx context.Context) {
 						go func() {
 							sub.Event <- SegmentId{
 								ZoneNo:      updateSitEntry.ZoneNo,
-								SegmentNo:   updateSitEntry.SegmentNo,
+								SegmentNo:   segmentNo,
 								SegmentType: updateSitEntry.SegmentType,
 							}
 						}()
