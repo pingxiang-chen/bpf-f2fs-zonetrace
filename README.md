@@ -51,7 +51,8 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
     ```bash
         cd $HOME/bpf-f2fs-zonetrace
-        ./scripts/mount_and_tracing.sh
+        sudo ./scripts/mount_f2fs.sh
+        sudo ./scripts/run_tracer.sh
     ```
 
     The default mount point is `/mnt/f2fs`. You can change the mount point by setting the `MOUNT_POINT` variable in `./scripts/mount_f2fs.sh`.
