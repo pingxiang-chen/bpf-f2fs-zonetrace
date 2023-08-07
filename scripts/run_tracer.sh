@@ -25,6 +25,7 @@ fi
 
 MAIN_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $1}')
 START_BLKADDR=$(cat $BLKADDR_FILE | awk '{print $2}')
-LOOP_DEV=$(cat $BLKADDR_FILE | awk '{print $3}')
+ZNS_DEVICE=$(cat $BLKADDR_FILE | awk '{print $3}')
+REGULAR_DEVICE=$(cat $BLKADDR_FILE | awk '{print $4}')
 
-./src/bpf/f2fszonetracer nvme0n1 loop$LOOP_DEV $MAIN_BLKADDR $START_BLKADDR | ./viewer/viewer
+./src/bpf/f2fszonetracer $ZNS_DEVICE $REGULAR_DEIVICE $MAIN_BLKADDR $START_BLKADDR | ./viewer/viewer
