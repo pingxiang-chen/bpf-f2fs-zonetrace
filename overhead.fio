@@ -1,0 +1,11 @@
+[global]
+group_reporting
+ioengine=psync
+rw=randwrite
+bs=4k
+size=1G
+numjobs=${NUMJOBS}
+direct=0
+
+[db]
+filename=/mnt/f2fs/database.db
