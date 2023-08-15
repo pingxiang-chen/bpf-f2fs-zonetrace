@@ -5,17 +5,24 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"syscall"
 	"unsafe"
 )
 
-func executeLs() ([]byte, error) {
-	cmd := exec.Command("ls", "-l")
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+const (
+	FIEMAP_EXTENT_SIZE = 56
+	FIEMAP_SIZE        = 32
+	FS_IOC_FIEMAP      = 3223348747
+	FIEMAP_MAX_OFFSET  = ^uint64(0)
+	FIEMAP_FLAG_SYNC   = 0x0001
+	FIEMAP_EXTENT_LAST = 0x0001
+)
+
+type zns_info struct {
+	zns_start_blkaddr uint64
+	zone_blocks       uint64
 }
 
 type fiemap_extent struct {
@@ -24,7 +31,7 @@ type fiemap_extent struct {
 	fe_length     uint64
 	fe_reserved64 [2]uint64
 	fe_flags      uint32
-	fe_reserved   [3]uint64
+	fe_reserved   [3]uint32
 } // 56 bytes
 
 type fiemap struct {
@@ -34,61 +41,111 @@ type fiemap struct {
 	fm_mapped_extents uint32
 	fm_extent_count   uint32
 	fm_reserved       uint32
-	fm_extents        [1 << 10]fiemap_extent
 } // 32 bytes
 
-func ioctl() {
-	file, err := os.Open("/mnt/f2fs/normal.0.0.jpg")
+type extent struct {
+	logical  uint64
+	physical uint64
+	length   uint64
+	flags    uint32
+}
+
+func get_zns_info(regular_device string, zns_device string) (zns_info, error) {
+	out, err := exec.Command("dump.f2fs", fmt.Sprintf("/dev/%s", regular_device)).Output()
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return zns_info{}, err
+	}
+	output := string(out)
+	zns_blkaddr_pattern := regexp.MustCompile(fmt.Sprintf(`/dev/%s blkaddr = (\w+)`, zns_device))
+	match := zns_blkaddr_pattern.FindStringSubmatch(output)
+	if len(match) < 2 {
+		return zns_info{}, errors.New("Cannot find zns blk addr")
+	}
+	zns_blkaddr, err := strconv.ParseInt(match[1], 16, 64)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return zns_info{}, err
+	}
+	zone_blocks_pattern := regexp.MustCompile(`(\d+) blocks per zone`)
+	match = zone_blocks_pattern.FindStringSubmatch(output)
+	if len(match) < 2 {
+		return zns_info{}, errors.New("Cannot find zone blocks")
+	}
+	zone_blocks, err := strconv.Atoi(match[1])
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return zns_info{}, err
+	}
+	// fmt.Println(output)
+	return zns_info{
+		zns_start_blkaddr: uint64(zns_blkaddr),
+		zone_blocks:       uint64(zone_blocks),
+	}, nil
+}
+
+func get_extents(path string) ([]extent, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		fmt.Printf("Error: open: %s\n", err)
-		return
+		return nil, err
 	}
 	if err != nil {
 		fmt.Printf("Error: stat: %s\n", err)
-		return
+		return nil, err
 	}
-	fiemap_result := fiemap{fm_start: 0, fm_length: ^uint64(0), fm_flags: 0x1, fm_mapped_extents: 0, fm_extent_count: 0, fm_reserved: 0}
+	// check fm_mappd_extents count
+	fiemap_result := fiemap{fm_start: 0, fm_length: FIEMAP_MAX_OFFSET, fm_flags: FIEMAP_FLAG_SYNC, fm_mapped_extents: 0, fm_extent_count: 0, fm_reserved: 0}
 	ptr := uintptr(unsafe.Pointer(&fiemap_result))
-
-	r1, r2, err := syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), 3223348747, ptr)
+	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FS_IOC_FIEMAP, ptr)
 	if errors.Is(err, os.ErrInvalid) {
-		fmt.Printf("Error: fiemap: %s\n", err)
-		return
+		fmt.Printf("Error: ioctl: %s\n", err)
+		return nil, err
 	}
-	fmt.Printf("syscall %d %d\n", r1, r2)
-	fmt.Printf("mapped_extents: %d\n", fiemap_result.fm_mapped_extents)
-	fiemap_extents_temp := make([]byte, 32+(56*fiemap_result.fm_mapped_extents))
-	fiemap_extents_ptr := unsafe.Pointer(&fiemap_extents_temp)
-	fiemap_extents := (*fiemap)(fiemap_extents_ptr)
-	fiemap_extents.fm_start = 0
-	fiemap_extents.fm_length = ^uint64(0)
-	fiemap_extents.fm_flags = 0x1
-	fiemap_extents.fm_extent_count = fiemap_result.fm_mapped_extents
-	fiemap_extents.fm_mapped_extents = 0
-	r1, r2, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), 3223348747, uintptr(unsafe.Pointer(&fiemap_extents_temp)))
+	// allocate for actual extents count
+	fiemap_extents := make([]fiemap_extent, fiemap_result.fm_mapped_extents+1)
+	// index 0 element as fiemap
+	fiemap_ptr := unsafe.Pointer(uintptr(unsafe.Pointer(&fiemap_extents[1])) - FIEMAP_SIZE)
+	fiemap_struct := (*fiemap)(fiemap_ptr)
+	fiemap_struct.fm_start = 0
+	fiemap_struct.fm_length = FIEMAP_MAX_OFFSET
+	fiemap_struct.fm_flags = FIEMAP_FLAG_SYNC
+	fiemap_struct.fm_extent_count = fiemap_result.fm_mapped_extents
+	fiemap_struct.fm_mapped_extents = 0
+	// get extents
+	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FS_IOC_FIEMAP, uintptr(fiemap_ptr))
 	if errors.Is(err, os.ErrInvalid) {
-		fmt.Printf("Error: fiemap: %s\n", err)
-		return
+		fmt.Printf("Error: ioctl: %s\n", err)
+		return nil, err
 	}
-	// fmt.Printf("%v\n", fiemap_extents)
-	// fiemap_extents_array :=
-	for i := 0; i < int(fiemap_extents.fm_extent_count); i++ {
-		extent := fiemap_extents.fm_extents[i]
-		fmt.Printf("extent: %v\n", extent)
-		// fmt.Printf("extent: %d %d %d %d\n", extent.fe_logical, extent.fe_physical, extent.fe_length, extent.fe_flags)
+	// convert
+	extents := make([]extent, fiemap_struct.fm_extent_count)
+	for i := 1; i <= int(fiemap_struct.fm_extent_count); i++ {
+		extents[i-1] = extent{
+			logical:  fiemap_extents[i].fe_logical,
+			physical: fiemap_extents[i].fe_physical,
+			length:   fiemap_extents[i].fe_length,
+			flags:    fiemap_extents[i].fe_flags,
+		}
 	}
-	// for i := 0; i < len(extents); i++ {
-	// 	extent := extents[i]
-	// 	fmt.Printf("extent: %v\n", extent)
-	// }
+	if extents[len(extents)-1].flags&FIEMAP_EXTENT_LAST == 0 {
+		fmt.Printf("WARN: incomplete extents list.")
+	}
+	return extents, nil
 }
 
 func main() {
-	// out, err := executeLs()
-	// if err != nil {
-	// 	fmt.Printf("Error: %s\n", err)
-	// 	return
-	// }
-	ioctl()
-	// fmt.Printf("Output: %s\n", out)
+	info, err := get_zns_info("nvme0n1p3", "nvme1n1")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return
+	}
+	fmt.Printf("%#v\n", info)
+	extents, err := get_extents("/mnt/f2fs/normal.0.0.jpg")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return
+	}
+	fmt.Printf("%#v\n", extents[len(extents)-1])
+	fmt.Printf("%#v\n", extents)
 }
