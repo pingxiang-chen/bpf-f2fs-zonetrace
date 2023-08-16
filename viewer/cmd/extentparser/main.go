@@ -50,6 +50,21 @@ type extent struct {
 	flags    uint32
 }
 
+func dir_list(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return nil, err
+	}
+	ret := []string{}
+	for _, entry := range entries {
+		if entry.Type().IsRegular() {
+			ret = append(ret, entry.Name())
+		}
+	}
+	return ret, nil
+}
+
 func get_zns_info(regular_device string, zns_device string) (zns_info, error) {
 	out, err := exec.Command("dump.f2fs", fmt.Sprintf("/dev/%s", regular_device)).Output()
 	if err != nil {
@@ -147,5 +162,11 @@ func main() {
 		return
 	}
 	fmt.Printf("%#v\n", extents[len(extents)-1])
-	fmt.Printf("%#v\n", extents)
+	// fmt.Printf("%#v\n", extents)
+	files, err := dir_list("/mnt/f2fs/")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return
+	}
+	fmt.Println(files)
 }
