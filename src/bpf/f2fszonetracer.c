@@ -55,6 +55,9 @@ void bump_memlock_rlimit(void) {
     }
 }
 
+/**
+ * handle BPF event
+*/
 int handle_event(void *ctx, void *data, size_t data_sz) {
     const struct event *e = data;
 
@@ -75,11 +78,15 @@ int handle_event(void *ctx, void *data, size_t data_sz) {
     return 0;
 }
 
+/**
+ * Read values from sysfs path
+*/
 int read_sysfs_device_queue(const char *device_path, const char *filename) {
     FILE *proc;
     char cmd[1024];
     int value;
 
+    /* since sysfs is not a regular file, use popen instead. */
     snprintf(cmd, sizeof(cmd), "cat /sys/block/%s/queue/%s", device_path, filename);
     if (DEBUG)
         fprintf(stderr, "debug: cmd=%s\n", cmd);
