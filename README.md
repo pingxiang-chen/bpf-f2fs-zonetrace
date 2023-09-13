@@ -81,8 +81,8 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     You can do some operations on the F2FS filesystem. For example, you can use our pre-defined fio jobfile.
 
     ```bash
-        sudo apt -y install fio
-        sudo fio ./job.fio
+        cd $HOME/bpf-f2fs-zonetrace
+        sudo fio ./workloads/job.fio
     ```
 
     Then you can see the trace data in the viewer.
