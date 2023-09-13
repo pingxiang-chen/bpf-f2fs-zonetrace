@@ -1,0 +1,58 @@
+#!/usr/bin/bpftrace
+/*
+ * f2fsgc	Trace F2FS GC scheme.
+ * 		For Linux, uses bpftrace and eBPF.
+ *
+ * f2fsgc traces important function in F2FS GC Path
+ *
+ * Copyright (c) 2023 Ping-Xiang Chen.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * 13-Sep-2023	Ping-Xiang Chen	created this.
+ */
+
+BEGIN
+{
+	printf("Tracing F2FS GC... Hit Ctrl-C to end.\n");
+}
+
+kprobe:get_victim_by_default
+{
+	printf("kprobe:get_victim_by_default: %u, gc_type %d\n",   *arg1, arg2);
+}
+
+kprobe:f2fs_unpin_all_sections
+{
+	printf("kprobe:f2fs_unpin_all_sections %d\n", arg1);
+}
+
+kprobe:do_garbage_collect
+{
+	printf("segno = %u\n", arg1);
+}
+
+kretprobe:get_victim_by_default
+{
+	printf(" ret=%d\n", retval);
+}
+
+
+kprobe:f2fs_invalidate_blocks
+{
+	printf("addr=%u\n", arg1);
+}
+
+kprobe:__allocate_new_segment
+{
+	printf("type=%u\n", arg1);
+}
+
+kprobe:f2fs_allocate_data_block
+{
+	printf("f2fs_allocate_data_block: old_blkaddr=%u\n", arg2);
+}
+
+kprobe:locate_dirty_segment
+{
+	printf("locate_dirty_segment: segno=%d\n", arg1);
+}

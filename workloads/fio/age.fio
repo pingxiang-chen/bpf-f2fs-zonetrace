@@ -1,0 +1,11 @@
+[global]
+group_reporting
+filename=/mnt/f2fs/test.0.0
+fsync=1
+filesize=400m
+
+[test]
+rw=randwrite
+io_size=1g
+numjobs=4
+bs=4k

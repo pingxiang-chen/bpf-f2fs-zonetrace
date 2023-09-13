@@ -1,0 +1,12 @@
+[global]
+group_reporting
+ioengine=psync
+rw=write
+bs=4k
+filesize=1m
+numjobs=1
+io_size=1m
+buffer_pattern="test"
+
+[test]
+directory=/mnt/f2fs
