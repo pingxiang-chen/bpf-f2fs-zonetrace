@@ -19,7 +19,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
 1. Prepare the FEMU environment
 
-    We provide a pre-built Debian 12 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EbSON0cUewhFgugceuFiAAQBRpy4hm4x1oZP0uZie6_CgA?e=qRUw8a).
+    We provide a pre-built Debian 12 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EV9ile8hYgZGoCpJ9mVJH7QBHtV4PdYDaK0K8bgKQGmONA?e=Jzjduv).
 
     and then put the image into the `$HOME/images`.
 
