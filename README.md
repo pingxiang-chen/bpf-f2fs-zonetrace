@@ -82,7 +82,7 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
     ```bash
         cd $HOME/bpf-f2fs-zonetrace
-        sudo fio ./workloads/job.fio
+        sudo fio ./workloads/fio/job.fio
     ```
 
     Then you can see the trace data in the viewer.
