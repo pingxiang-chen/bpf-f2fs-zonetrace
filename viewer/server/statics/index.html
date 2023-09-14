@@ -32,20 +32,21 @@
         }
 
     </style>
-    <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v7.js"></script>
     <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
 </head>
 <body style="background-color: #f3f3f3">
 
 
-<!-- Create a div where the graph will take place -->
 <div class="container">
+
+    <!-- left side. map of blocks -->
     <div class="column">
         <div>Blocks of Zone <b id="curZoneNum"></b> (<span id="curSegType"></span>)</div>
         <canvas id="chartCanvas"></canvas>
     </div>
 
+    <!-- color index -->
     <div class="column" style="text-align: end">
         <div id="color-indexes">
             <h4>Color Index</h4>
@@ -80,6 +81,7 @@
         </div>
     </div>
 
+    <!-- right side. zone list -->
     <div class="column">
         <div id="zones" class="left-align"></div>
     </div>
@@ -87,47 +89,76 @@
 
 
 <script>
-    const currentZoneId = Number(document.location.pathname.slice(6))
-    const curSegTypeSpan = document.getElementById('curSegType')
-    let lastSegmentType = -2;
+    const currentZoneId = Number(document.location.pathname.slice(6)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
+    let lastSegmentType = -2; // -2: NotChanged
+    const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
 
-    async function getZoneInfo() {
-        const response = await fetch(`/api/info/${currentZoneId}`);
+    /**
+     * Get information for a specific zone.
+     * This function returns information about the number of zones, segments in each zone, etc.
+     *
+     * @param {string} zoneId - The number of the zone to get information for
+     * @returns {Promise<object>} - A Promise object containing an object with zone information
+     * @throws {Error} - Throws an error if getting zone information fails
+     */
+    async function getZoneInfo(zoneId) {
+        const response = await fetch(`/api/info/${zoneId}`);
         if (!response.ok) {
             throw new Error('Cannot get zone info');
         }
         return await response.json();
     }
 
+    /**
+     * Get the label for a given segment type.
+     *
+     * @param {number} segmentType - The segment type (-2 to 5, inclusive)
+     * @returns {string} - The label for the segment type
+     */
     function getSegmentTypeLabel(segmentType) {
         // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
         return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node'][segmentType + 2];
     }
 
+    /**
+     * Get the color for a given segment type.
+     *
+     * @param {number} segmentType - The segment type (-2 to 5, inclusive)
+     * @returns {string} - The color for the segment type
+     */
     function getSegmentTypeColor(segmentType) {
         if (segmentType < 0 || 5 < segmentType) return 'gray';
         return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'][segmentType];
     }
 
+    /**
+     * Update the current zone's segment type and display it on the screen.
+     *
+     * @param {number} segmentType - The segment type to update
+     */
     async function updateCurrentSegmentType(segmentType) {
         if (lastSegmentType === segmentType) return;
         lastSegmentType = segmentType;
         curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
     }
 
+    /**
+     * Main function.
+     * Performs major logic and initializes the page and data display.
+     */
     async function main() {
-        const info = await getZoneInfo();
+        const info = await getZoneInfo(currentZoneId);
         document.getElementById('curZoneNum').innerText = String(currentZoneId);
         updateCurrentSegmentType(info.last_segment_type);
 
-        /* ---------- 캔버스 그리기 ---------- */
+        /* ---------- Draw the canvas representing zone's blocks ---------- */
 
-        // 캔버스 크기와 셀 크기
+        // Canvas size and cell size
         const canvasWidth = info.block_per_segment;
         const canvasHeight = info.total_segment_per_zone;
         const cellSize = 1;
 
-        // 캔버스 생성
+        // Create the canvas
         const canvas = d3.select("#chartCanvas")
             .attr("width", canvasWidth * cellSize)
             .attr("height", canvasHeight * cellSize)
@@ -138,6 +169,13 @@
             return Array.from({length: canvasWidth});
         });
 
+        /**
+         * Draw a segment's information on the canvas.
+         *
+         * @param {number[]} row - Bitmap array of the segment
+         * @param {number} y - Y coordinate position on the canvas where the segment is drawn
+         * @param {number} segmentType - The segment's type represented by a number
+         */
         function drawChart(row, y, segmentType) {
             row.forEach((d, i) => {
                 let color = "white";
@@ -158,8 +196,9 @@
         }
 
 
-        /* ---------- svg 그리기 ---------- */
+        /* ---------- Draw SVG ---------- */
 
+        // Close the connection when clicking on another zone using AbortController, signal
         const ctx = new AbortController();
         const signal = ctx.signal;
 
@@ -175,11 +214,12 @@
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         const zoneTotalSize = info.total_zone;
-        let xLength = 15;
+        let xLength = 15; // Display 15 zones in a column by default
         let yLength = Math.ceil(zoneTotalSize / xLength);
         xLength = Math.ceil(zoneTotalSize / yLength);
 
         if (xLength > yLength) {
+            // If xLength is greater than yLength, swap them to draw in a tall format
             [xLength, yLength] = [yLength, xLength]
         }
 
@@ -302,18 +342,25 @@
 
         const lastUpdateZone = {};
 
-        async function blinkZone(zoneNo, segmentType) {
+        /**
+         * Updates the color or text when the segmentType of the corresponding zone changes.
+         *
+         * @param {number} zoneNo - The zone number.
+         * @param {number} segmentType - The segmentType that has been updated.
+         */
+        async function updateZoneSegmentType(zoneNo, segmentType) {
             if (zoneNo === currentZoneId) {
                 updateCurrentSegmentType(segmentType)
             }
             let color = getSegmentTypeColor(segmentType);
-            const _now = Date.now();
-            lastUpdateZone[zoneNo] = _now;
+            lastUpdateZone[zoneNo] = Date.now();
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
                 })
             cell.style("fill", color)
+
+            // Change it back to black after 1 second when it has been updated
             // setTimeout(() => {
             //     if (lastUpdateZone[zoneNo] === _now) {
             //         cell.style("fill", "black")
@@ -322,12 +369,16 @@
         }
 
 
-        /* ---------- handle Stream Data ---------- */
+        /**
+         * Connect to the server and receive zone updates in real-time,
+         * triggering various events accordingly.
+         */
         async function handleStreamData() {
+            // Decode data from the server as protobuf.
             const root = await protobuf.load("/static/zns.proto");
             const ZoneResponse = root.lookupType('ZoneResponse');
 
-            const response = await fetch(`/api/zone/${currentZoneId}`, {signal}); // Replace with your streaming endpoint URL
+            const response = await fetch(`/api/zone/${currentZoneId}`, {signal});
             const reader = response.body.getReader();
 
             let buf = [];
@@ -347,10 +398,13 @@
                     }
                     buf = buf.slice(r.pos);
 
-                    if (zone.lastSegmentType !== -2) {
-                        blinkZone(zone.zoneNo, zone.lastSegmentType);
+                    // Perform zone updates with data decoded using protobuf
+
+                    if (zone.lastSegmentType !== -2) { // -2: NotChanged
+                        updateZoneSegmentType(zone.zoneNo, zone.lastSegmentType);
                     }
 
+                    // Draw with the bitmap data of each segment
                     zone.segments.forEach((segment, _) => {
                         let row = [];
                         if (segment.map) {

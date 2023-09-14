@@ -14,11 +14,14 @@ import (
 
 var _ ZNSReceiver = (*procReceiver)(nil)
 
+// procReceiver reads segment information from /proc/fs/f2fs/${device}/segment_bits only once.
+// It implements the ZNSReceiver interface.
 type procReceiver struct {
 	memory      znsmemory.ZNSMemory
 	isReceiving bool
 }
 
+// StartReceive starts receiving current segment information.
 func (p procReceiver) StartReceive(ctx context.Context, r *bufio.Reader) {
 	if p.isReceiving {
 		panic("already receiving")
@@ -33,10 +36,11 @@ func (p procReceiver) StartReceive(ctx context.Context, r *bufio.Reader) {
 	}()
 }
 
+// readSegmentBits reads and update segment information
 func (p procReceiver) readSegmentBits(ctx context.Context, r *bufio.Reader) error {
 	zoneInfo := p.memory.GetZoneInfo()
 
-	// Skip header
+	// Skip header lines
 	if _, err := r.ReadBytes('\n'); err != nil {
 		return fmt.Errorf("read line: %w", err)
 	}
@@ -59,6 +63,7 @@ func (p procReceiver) readSegmentBits(ctx context.Context, r *bufio.Reader) erro
 			continue
 		}
 
+		// Parse segment number
 		read = strings.Index(line, " ")
 		if read == -1 {
 			return fmt.Errorf("cannot find space in segment bit line")
@@ -70,6 +75,7 @@ func (p procReceiver) readSegmentBits(ctx context.Context, r *bufio.Reader) erro
 		}
 		line = line[read+1:]
 
+		// Parse segment type
 		read = strings.Index(line, "|")
 		if read == -1 {
 			return fmt.Errorf("cannot find | in segment bit line")
@@ -86,12 +92,13 @@ func (p procReceiver) readSegmentBits(ctx context.Context, r *bufio.Reader) erro
 			return fmt.Errorf("invalid segment type: %d", segmentType)
 		}
 
-		// Skip `|`
 		read = strings.Index(line, "|")
 		if read == -1 {
 			return fmt.Errorf("cannot find | in segment bit line")
 		}
-		line = line[read+2 : len(line)-1] // skip extra space and last newline
+		line = line[read+2 : len(line)-1] // skip `|`, skip extra space and last newline
+
+		// Parse valid map
 		hexStr := strings.Replace(line, " ", "", -1)
 		hexBytes, err := hex.DecodeString(hexStr)
 		if err != nil {
@@ -111,6 +118,7 @@ func (p procReceiver) readSegmentBits(ctx context.Context, r *bufio.Reader) erro
 	return nil
 }
 
+// NewProcReceiver creates a new instance of ZNSReceiver for reading from the /proc filesystem.
 func NewProcReceiver(memory znsmemory.ZNSMemory) ZNSReceiver {
 	return &procReceiver{
 		memory:      memory,

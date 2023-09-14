@@ -15,6 +15,8 @@ import (
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
+// newSignalContext creates a new context with a cancel function that's triggered
+// when an interrupt signal (e.g., Ctrl+C) is received.
 func newSignalContext() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal)
@@ -27,12 +29,16 @@ func newSignalContext() context.Context {
 }
 
 func main() {
+	// Create a buffered reader for standard input with a buffer size of 4096 bytes.
 	stdioReader := bufio.NewReaderSize(os.Stdin, 4096)
+
+	// Read zone information from standard input
 	zoneInfo, err := receiver.ReadZoneInfo(stdioReader)
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
 	}
 
+	// Open the procFile for reading to read F2FS segment bits information.
 	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.MountPath)
 	procFile, err := os.Open(procPath)
 	if err != nil {
@@ -40,15 +46,22 @@ func main() {
 	}
 
 	port := 9090
-	ctx := newSignalContext()
-	m := znsmemory.New(ctx, *zoneInfo)
+	ctx := newSignalContext()          // Create a signal context for managing signals.
+	m := znsmemory.New(ctx, *zoneInfo) // Create a new in-memory store to save all updates.
+
+	// Start receiving traces from standard input.
 	receiver.NewTraceReceiver(m).StartReceive(ctx, stdioReader)
+
+	// If procFile is successfully opened, create a buffered reader and start receiving data.
 	if procFile != nil {
 		procReader := bufio.NewReaderSize(procFile, 4096)
 		receiver.NewProcReceiver(m).StartReceive(ctx, procReader)
 	}
+
+	// Create an HTTP server
 	srv := server.New(ctx, m, port)
 	fmt.Printf("======== Running on http://0.0.0.0:%d ========\n", port)
+	// Start the HTTP server and wait for it to close.
 	err = srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)

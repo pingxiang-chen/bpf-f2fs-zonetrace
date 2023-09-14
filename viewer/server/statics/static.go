@@ -2,9 +2,12 @@ package statics
 
 import (
 	_ "embed"
+
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
 )
 
+// IndexHtmlFile reads the `index.html` file and stores its bytes.
+//
 //go:embed index.html
 var IndexHtmlFile []byte
 

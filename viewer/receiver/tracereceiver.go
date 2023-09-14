@@ -13,11 +13,13 @@ import (
 
 var _ ZNSReceiver = (*traceReceiver)(nil)
 
+// traceReceiver implements the ZNSReceiver interface and reads segment updates from zone-tracer.
 type traceReceiver struct {
 	memory      znsmemory.ZNSMemory
 	isReceiving bool
 }
 
+// StartReceive starts receiving segment updates from the zone-tracer.
 func (t *traceReceiver) StartReceive(ctx context.Context, r *bufio.Reader) {
 	if t.isReceiving {
 		panic("already receiving trace")
@@ -42,6 +44,7 @@ func (t *traceReceiver) StartReceive(ctx context.Context, r *bufio.Reader) {
 	}()
 }
 
+// readSitEntryUpdate reads and parses a SitEntryUpdate.
 func (t *traceReceiver) readSitEntryUpdate(r *bufio.Reader) (*znsmemory.SitEntryUpdate, error) {
 	var err error
 	intBuf := make([]byte, 4)
@@ -77,6 +80,7 @@ func (t *traceReceiver) readSitEntryUpdate(r *bufio.Reader) (*znsmemory.SitEntry
 	}, nil
 }
 
+// ReadZoneInfo reads and parses zone information
 func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	line, err := r.ReadString('\n')
 	if err != nil {
@@ -100,6 +104,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	}, nil
 }
 
+// NewTraceReceiver creates a new instance of ZNSReceiver for reading trace updates.
 func NewTraceReceiver(memory znsmemory.ZNSMemory) ZNSReceiver {
 	return &traceReceiver{
 		memory:      memory,

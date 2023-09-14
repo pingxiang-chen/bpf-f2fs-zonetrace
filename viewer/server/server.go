@@ -15,10 +15,12 @@ import (
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
+// api represents the API handlers for the server.
 type api struct {
 	znsMemory znsmemory.ZNSMemory
 }
 
+// indexHandler handles the root URL, redirecting to "/zone/0".
 func (s *api) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.RequestURI != "/" {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -27,6 +29,7 @@ func (s *api) indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/zone/0", http.StatusFound)
 }
 
+// htmlHandler serves HTML content.
 func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	_, err := w.Write(statics.IndexHtmlFile)
@@ -36,9 +39,11 @@ func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// staticsHandler serves static files.\
 func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
-	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
-	staticFile, ok := statics.StaticFileMap[pk]
+	// Parse /static/:filename
+	staticFileName := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
+	staticFile, ok := statics.StaticFileMap[staticFileName]
 	if !ok {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
@@ -51,7 +56,9 @@ func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// zoneInfoHandler handles requests for zone information.
 func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse /api/info/:pk
 	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
 	currentZoneNo, err := strconv.Atoi(pk)
 	if err != nil {
@@ -73,6 +80,7 @@ func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// streamZoneDataHandler handles streaming zone data to clients.
 func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -189,6 +197,8 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// installGracefulShutdown installs a graceful shutdown for the HTTP server.
+// It will wait for the remain requests to be done and then shutdown the server.
 func installGracefulShutdown(ctx context.Context, server *http.Server) {
 	go func() {
 		<-ctx.Done()
@@ -199,6 +209,7 @@ func installGracefulShutdown(ctx context.Context, server *http.Server) {
 	}()
 }
 
+// New creates a new instance of the HTTP server.
 func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Server {
 	a := api{
 		znsMemory: znsMemory,

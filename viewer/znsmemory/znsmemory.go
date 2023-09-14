@@ -6,19 +6,35 @@ import (
 	"sync"
 )
 
+var _ ZNSMemory = (*memory)(nil)
+
+// ZNSMemory is an interface that stores all states of a ZNS SSD and provides event subscription for state updates.
 type ZNSMemory interface {
+	// UpdateSegment updates a ZNS memory segment based on the provided SitEntryUpdate.
 	UpdateSegment(updateSitEntry *SitEntryUpdate)
+
+	// GetZone retrieves a zone by its zone number.
 	GetZone(zoneNum int) (*Zone, error)
+
+	// GetSegment retrieves a segment by its zone and segment numbers.
 	GetSegment(zoneNum, segmentNum int) (*Segment, error)
+
+	// GetZoneInfo returns information about the ZNS memory.
 	GetZoneInfo() *ZoneInfo
+
+	// Subscribe creates a new subscriber for ZNS state updates.
 	Subscribe() *Subscriber
+
+	// UnSubscribe removes a subscriber from the list of subscribers.
 	UnSubscribe(sub *Subscriber)
 }
 
+// Subscriber is a struct representing a subscriber for ZNS memory events.
 type Subscriber struct {
 	Event chan SegmentId
 }
 
+// memory is the implementation of the ZNSMemory interface.
 type memory struct {
 	zns             ZonedStorage
 	updateSitCh     chan *SitEntryUpdate
@@ -72,6 +88,7 @@ func (m *memory) UnSubscribe(sub *Subscriber) {
 	}
 }
 
+// startEventLoop starts a goroutine to handle ZNS memory events.
 func (m *memory) startEventLoop(ctx context.Context) {
 	maxSegmentFullNo := m.zns.TotalSegmentPerZone * m.zns.TotalZone
 	go func() {
@@ -118,7 +135,9 @@ func (m *memory) startEventLoop(ctx context.Context) {
 	}()
 }
 
+// New creates a new instance of ZNSMemory with the provided context and ZoneInfo.
 func New(ctx context.Context, info ZoneInfo) ZNSMemory {
+	// Initialize ZNS memory zones based on ZoneInfo.
 	zones := make([]Zone, 0, info.TotalZone)
 	for i := 0; i < info.TotalZone; i++ {
 		zones = append(zones, Zone{
@@ -131,6 +150,7 @@ func New(ctx context.Context, info ZoneInfo) ZNSMemory {
 		ZoneInfo: info,
 		Zones:    zones,
 	}
+	// Create a memory instance and start the event loop.
 	m := &memory{
 		zns:             zns,
 		updateSitCh:     make(chan *SitEntryUpdate, 1024),
