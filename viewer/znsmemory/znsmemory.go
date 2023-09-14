@@ -55,7 +55,7 @@ func (m *memory) GetZone(zoneNum int) (*Zone, error) {
 	if zoneNum < 0 || zoneNum >= m.zns.TotalZone {
 		return nil, fmt.Errorf("zone %d not found", zoneNum)
 	}
-	return &m.zns.Zones[zoneNum], nil
+	return m.zns.Zones[zoneNum], nil
 }
 
 func (m *memory) GetSegment(zoneNum, segmentNum int) (*Segment, error) {
@@ -138,11 +138,18 @@ func (m *memory) startEventLoop(ctx context.Context) {
 // New creates a new instance of ZNSMemory with the provided context and ZoneInfo.
 func New(ctx context.Context, info ZoneInfo) ZNSMemory {
 	// Initialize ZNS memory zones based on ZoneInfo.
-	zones := make([]Zone, 0, info.TotalZone)
+	zones := make([]*Zone, 0, info.TotalZone)
 	for i := 0; i < info.TotalZone; i++ {
-		zones = append(zones, Zone{
+		segments := make([]Segment, 0, info.TotalSegmentPerZone)
+		for j := 0; j < info.TotalSegmentPerZone; j++ {
+			segments = append(segments, Segment{
+				ValidMap:    nil,
+				SegmentType: UnknownSegment,
+			})
+		}
+		zones = append(zones, &Zone{
 			ZoneNo:          i,
-			Segments:        make([]Segment, info.TotalSegmentPerZone),
+			Segments:        segments,
 			LastSegmentType: UnknownSegment,
 		})
 	}

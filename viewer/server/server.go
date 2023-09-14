@@ -80,6 +80,27 @@ func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getMostFrequentSegmentType finds the most frequent segment type
+func getMostFrequentSegmentType(segments []Segment) znsmemory.SegmentType {
+	countSegmentType := make(map[znsmemory.SegmentType]int)
+	for _, segment := range segments {
+		countSegmentType[znsmemory.SegmentType(segment.SegmentType)]++
+	}
+
+	mostFrequentSegmentType := znsmemory.NotChanged
+	maxCount := 0
+	for segmentType, count := range countSegmentType {
+		if segmentType == znsmemory.NotChanged || segmentType == znsmemory.UnknownSegment {
+			continue
+		}
+		if count > maxCount {
+			mostFrequentSegmentType = segmentType
+			maxCount = count
+		}
+	}
+	return mostFrequentSegmentType
+}
+
 // streamZoneDataHandler handles streaming zone data to clients.
 func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -97,11 +118,6 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
-		return
-	}
-	zone, err := s.znsMemory.GetZone(currentZoneNo)
-	if err != nil {
-		http.Error(w, "Error getting zone", http.StatusInternalServerError)
 		return
 	}
 
@@ -128,7 +144,27 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// send all segments
+	// send initial zone segment type
+	info := s.znsMemory.GetZoneInfo()
+	for i := 0; i < info.TotalZone; i++ {
+		zone, err := s.znsMemory.GetZone(i)
+		if err != nil {
+			http.Error(w, "Error getting zone", http.StatusInternalServerError)
+			return
+		}
+		data := ToZoneResponse(zone.ZoneNo, zone.LastSegmentType, nil)
+		if _, err := w.Write(data.Serialize()); err != nil {
+			http.Error(w, "Error writing data", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// send initial segments data
+	zone, err := s.znsMemory.GetZone(currentZoneNo)
+	if err != nil {
+		http.Error(w, "Error getting zone", http.StatusInternalServerError)
+		return
+	}
 	segments := make([]Segment, len(zone.Segments))
 	for i, segment := range zone.Segments {
 		segments[i] = Segment{
@@ -137,7 +173,8 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			Map:         segment.ValidMap,
 		}
 	}
-	data := ToZoneResponse(zone.ZoneNo, znsmemory.NotChanged, segments)
+	mostFrequentSegmentType := getMostFrequentSegmentType(segments)
+	data := ToZoneResponse(zone.ZoneNo, mostFrequentSegmentType, segments)
 	respBuf.Push(data.Serialize())
 
 	// subscribe zone updates
@@ -191,7 +228,8 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 				})
 				delete(needUpdateSegment, segmentNo)
 			}
-			data = ToZoneResponse(currentZoneNo, znsmemory.NotChanged, segments)
+			mostFrequentSegmentType = getMostFrequentSegmentType(segments)
+			data = ToZoneResponse(currentZoneNo, mostFrequentSegmentType, segments)
 			respBuf.Push(data.Serialize())
 		}
 	}

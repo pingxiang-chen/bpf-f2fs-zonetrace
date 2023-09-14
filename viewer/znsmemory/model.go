@@ -70,5 +70,5 @@ type Zone struct {
 
 type ZonedStorage struct {
 	ZoneInfo
-	Zones []Zone
+	Zones []*Zone
 }

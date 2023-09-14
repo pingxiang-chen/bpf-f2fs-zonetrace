@@ -127,7 +127,7 @@
      * @returns {string} - The color for the segment type
      */
     function getSegmentTypeColor(segmentType) {
-        if (segmentType < 0 || 5 < segmentType) return 'gray';
+        if (segmentType < 0 || 5 < segmentType) return 'black';
         return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'][segmentType];
     }
 
@@ -399,11 +399,12 @@
                     buf = buf.slice(r.pos);
 
                     // Perform zone updates with data decoded using protobuf
-
                     if (zone.lastSegmentType !== -2) { // -2: NotChanged
                         updateZoneSegmentType(zone.zoneNo, zone.lastSegmentType);
                     }
-
+                    if (!zone.segments || zone.segments.length === 0) {
+                        continue;
+                    }
                     // Draw with the bitmap data of each segment
                     zone.segments.forEach((segment, _) => {
                         let row = [];
