@@ -128,8 +128,10 @@ func (m *memory) startEventLoop(ctx context.Context) {
 					}
 					previousSegmentType := zone.Segments[segmentNo].SegmentType
 					if previousSegmentType != newSegmentType {
-						zone.SegmentTypeCount[newSegmentType]++
-						if previousSegmentType != UnknownSegment {
+						if newSegmentType != EmptySegment {
+							zone.SegmentTypeCount[newSegmentType]++
+						}
+						if previousSegmentType != UnknownSegment && previousSegmentType != EmptySegment {
 							zone.SegmentTypeCount[previousSegmentType]--
 						}
 					}
