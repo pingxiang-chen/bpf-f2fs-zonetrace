@@ -173,9 +173,10 @@ func New(ctx context.Context, info ZoneInfo) ZNSMemory {
 			})
 		}
 		zones = append(zones, &Zone{
-			ZoneNo:          i,
-			Segments:        segments,
-			LastSegmentType: UnknownSegment,
+			ZoneNo:           i,
+			Segments:         segments,
+			LastSegmentType:  UnknownSegment,
+			SegmentTypeCount: make(map[SegmentType]int),
 		})
 	}
 	zns := ZonedStorage{
