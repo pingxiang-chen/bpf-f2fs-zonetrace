@@ -28,6 +28,13 @@ func newSignalContext() context.Context {
 	return ctx
 }
 
+// newResetSignal creates a new channel that receives a signal when a SIGHUP signal is received.
+func newResetSignal() chan os.Signal {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGHUP)
+	return c
+}
+
 func main() {
 	// Create a buffered reader for standard input with a buffer size of 4096 bytes.
 	stdioReader := bufio.NewReaderSize(os.Stdin, 4096)
@@ -40,9 +47,9 @@ func main() {
 
 	// Open the procFile for reading to read F2FS segment bits information.
 	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.MountPath)
-	procFile, err := os.Open(procPath)
-	if err != nil {
-		fmt.Printf("open %s: %v\n", procPath, err)
+	isProcFileExist := false
+	if _, err := os.Stat(procPath); err == nil {
+		isProcFileExist = true
 	}
 
 	port := 9090
@@ -52,10 +59,11 @@ func main() {
 	// Start receiving traces from standard input.
 	receiver.NewTraceReceiver(m).StartReceive(ctx, stdioReader)
 
-	// If procFile is successfully opened, create a buffered reader and start receiving data.
-	if procFile != nil {
-		procReader := bufio.NewReaderSize(procFile, 4096)
-		receiver.NewProcReceiver(m).StartReceive(ctx, procReader)
+	// If procFile exists, start receiving segment bits from it.
+	if isProcFileExist {
+		resetSignal := newResetSignal()
+		receiver.ReadProcSegmentBits(ctx, m, procPath)
+		go receiver.WatchProcSegmentBits(ctx, resetSignal, m, procPath)
 	}
 
 	// Create an HTTP server

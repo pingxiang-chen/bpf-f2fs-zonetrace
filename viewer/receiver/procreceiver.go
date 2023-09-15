@@ -14,7 +14,7 @@ import (
 
 var _ ZNSReceiver = (*procReceiver)(nil)
 
-// procReceiver reads segment information from /proc/fs/f2fs/${device}/segment_bits only once.
+// procReceiver reads segment information from /proc/fs/f2fs/${device}/segment_bits.
 // It implements the ZNSReceiver interface.
 type procReceiver struct {
 	memory      znsmemory.ZNSMemory
