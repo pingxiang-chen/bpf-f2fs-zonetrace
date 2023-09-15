@@ -145,19 +145,19 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// send initial zone segment type
-	//info := s.znsMemory.GetZoneInfo()
-	//for i := 0; i < info.TotalZone; i++ {
-	//	zone, err := s.znsMemory.GetZone(i)
-	//	if err != nil {
-	//		http.Error(w, "Error getting zone", http.StatusInternalServerError)
-	//		return
-	//	}
-	//	data := ToZoneResponse(zone.ZoneNo, zone.FrequentSegmentType(), nil)
-	//	if _, err := w.Write(data.Serialize()); err != nil {
-	//		http.Error(w, "Error writing data", http.StatusInternalServerError)
-	//		return
-	//	}
-	//}
+	info := s.znsMemory.GetZoneInfo()
+	for i := 0; i < info.TotalZone; i++ {
+		zone, err := s.znsMemory.GetZone(i)
+		if err != nil {
+			http.Error(w, "Error getting zone", http.StatusInternalServerError)
+			return
+		}
+		data := ToZoneResponse(zone.ZoneNo, zone.FrequentSegmentType(), nil)
+		if _, err := w.Write(data.Serialize()); err != nil {
+			http.Error(w, "Error writing data", http.StatusInternalServerError)
+			return
+		}
+	}
 
 	// send initial segments data
 	zone, err := s.znsMemory.GetZone(currentZoneNo)
