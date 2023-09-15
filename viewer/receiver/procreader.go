@@ -2,8 +2,10 @@ package receiver
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
@@ -15,7 +17,14 @@ func ReadProcSegmentBits(ctx context.Context, memory znsmemory.ZNSMemory, path s
 		fmt.Printf("open %s: %v\n", path, err)
 		return
 	}
-	procReader := bufio.NewReaderSize(procFile, 4096)
+	defer procFile.Close()
+	b, err := io.ReadAll(procFile)
+	if err != nil {
+		fmt.Printf("read %s: %v\n", path, err)
+		return
+	}
+	reader := bytes.NewBuffer(b)
+	procReader := bufio.NewReaderSize(reader, 4096)
 	NewProcReceiver(memory).StartReceive(ctx, procReader)
 }
 
