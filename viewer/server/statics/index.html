@@ -116,8 +116,8 @@
      * @returns {string} - The label for the segment type
      */
     function getSegmentTypeLabel(segmentType) {
-        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
-        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node'][segmentType + 2];
+        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode, 6: Empty
+        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node', 'Empty'][segmentType + 2];
     }
 
     /**
@@ -127,8 +127,8 @@
      * @returns {string} - The color for the segment type
      */
     function getSegmentTypeColor(segmentType) {
-        if (segmentType < 0 || 5 < segmentType) return 'black';
-        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue'][segmentType];
+        if (segmentType < 0 || 6 < segmentType) return 'black';
+        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue', 'black'][segmentType];
     }
 
     /**

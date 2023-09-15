@@ -3,6 +3,7 @@ package znsmemory
 import (
 	"context"
 	"fmt"
+	"math/bits"
 	"sync"
 )
 
@@ -31,7 +32,7 @@ type ZNSMemory interface {
 
 // Subscriber is a struct representing a subscriber for ZNS memory events.
 type Subscriber struct {
-	Event chan SegmentId
+	Event chan SegmentUpdateEvent
 }
 
 // memory is the implementation of the ZNSMemory interface.
@@ -72,7 +73,7 @@ func (m *memory) GetSegment(zoneNum, segmentNum int) (*Segment, error) {
 func (m *memory) Subscribe() *Subscriber {
 	m.subscriberMutex.Lock()
 	defer m.subscriberMutex.Unlock()
-	sub := &Subscriber{Event: make(chan SegmentId, 1024)}
+	sub := &Subscriber{Event: make(chan SegmentUpdateEvent, 1024)}
 	m.subscribers = append(m.subscribers, sub)
 	return sub
 }
@@ -107,14 +108,24 @@ func (m *memory) startEventLoop(ctx context.Context) {
 					continue
 				}
 				segmentNo := updateSitEntry.SegmentFullNo % m.zns.TotalSegmentPerZone
+				zone := m.zns.Zones[updateSitEntry.ZoneNo]
 
-				if m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType != updateSitEntry.SegmentType {
+				segmentDirtyCount := uint64(0)
+				for _, b := range updateSitEntry.ValidMap {
+					segmentDirtyCount += uint64(bits.OnesCount8(b))
+				}
+				beforeSegmentDirtyCount := zone.Segments[segmentNo].DirtyCount
+				zoneDirtyCount := zone.ZoneDirtyCount - beforeSegmentDirtyCount + segmentDirtyCount
+				m.zns.Zones[updateSitEntry.ZoneNo].ZoneDirtyCount = zoneDirtyCount
+
+				if zone.LastSegmentType != updateSitEntry.SegmentType {
 					m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = updateSitEntry.SegmentType
 				}
 
 				m.zns.Zones[updateSitEntry.ZoneNo].Segments[segmentNo] = Segment{
 					ValidMap:    updateSitEntry.ValidMap,
 					SegmentType: updateSitEntry.SegmentType,
+					DirtyCount:  segmentDirtyCount,
 				}
 				func() {
 					m.subscriberMutex.RLock()
@@ -122,10 +133,11 @@ func (m *memory) startEventLoop(ctx context.Context) {
 					for i := range m.subscribers {
 						sub := m.subscribers[i]
 						go func() {
-							sub.Event <- SegmentId{
-								ZoneNo:      updateSitEntry.ZoneNo,
-								SegmentNo:   segmentNo,
-								SegmentType: updateSitEntry.SegmentType,
+							sub.Event <- SegmentUpdateEvent{
+								ZoneNo:         updateSitEntry.ZoneNo,
+								SegmentNo:      segmentNo,
+								SegmentType:    updateSitEntry.SegmentType,
+								ZoneDirtyCount: zoneDirtyCount,
 							}
 						}()
 					}

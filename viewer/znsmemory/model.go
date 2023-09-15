@@ -26,6 +26,8 @@ const (
 
 	// ColdNodeSegment is type for infrequently accessed node segments
 	ColdNodeSegment // sky blue
+
+	EmptySegment // black
 )
 
 func (t SegmentType) IsValid() bool {
@@ -37,12 +39,14 @@ type ValidMap []byte
 type Segment struct {
 	ValidMap    ValidMap
 	SegmentType SegmentType
+	DirtyCount  uint64
 }
 
-type SegmentId struct {
-	ZoneNo      int
-	SegmentNo   int
-	SegmentType SegmentType
+type SegmentUpdateEvent struct {
+	ZoneNo         int
+	SegmentNo      int
+	SegmentType    SegmentType
+	ZoneDirtyCount uint64
 }
 
 type SitEntryUpdate struct {
@@ -63,6 +67,7 @@ type ZoneInfo struct {
 }
 
 type Zone struct {
+	ZoneDirtyCount  uint64
 	ZoneNo          int
 	Segments        []Segment
 	LastSegmentType SegmentType
