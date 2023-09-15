@@ -152,7 +152,11 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error getting zone", http.StatusInternalServerError)
 			return
 		}
-		data := ToZoneResponse(zone.ZoneNo, zone.LastSegmentType, nil)
+		segmentType := zone.LastSegmentType
+		if zone.ZoneDirtyCount == 0 {
+			segmentType = znsmemory.EmptySegment
+		}
+		data := ToZoneResponse(zone.ZoneNo, segmentType, nil)
 		if _, err := w.Write(data.Serialize()); err != nil {
 			http.Error(w, "Error writing data", http.StatusInternalServerError)
 			return
