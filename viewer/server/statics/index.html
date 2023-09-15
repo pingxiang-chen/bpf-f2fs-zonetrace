@@ -364,11 +364,11 @@
             cell.style("fill", color)
 
             // Change it back to black after 1 second when it has been updated
-            // setTimeout(() => {
-            //     if (lastUpdateZone[zoneNo] === _now) {
-            //         cell.style("fill", "black")
-            //     }
-            // }, 1000)
+            setTimeout(() => {
+                if (lastUpdateZone[zoneNo] === _now) {
+                    cell.style("fill", "black")
+                }
+            }, 1000)
         }
 
 
