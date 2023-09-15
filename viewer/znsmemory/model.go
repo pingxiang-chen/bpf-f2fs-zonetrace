@@ -75,6 +75,9 @@ type Zone struct {
 }
 
 func (z *Zone) FrequentSegmentType() SegmentType {
+	if z.ZoneDirtyCount == 0 {
+		return EmptySegment
+	}
 	var maxType SegmentType
 	maxCount := 0
 	for t, count := range z.SegmentTypeCount {
