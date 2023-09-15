@@ -200,7 +200,6 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			if update.ZoneDirtyCount == 0 {
 				segmentType = znsmemory.EmptySegment
 			}
-			fmt.Println("update", update.ZoneNo, update.SegmentNo, segmentType)
 
 			// for update segment type
 			previousSegmentType, ok := lastZoneSegmentType[update.ZoneNo]
