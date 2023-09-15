@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
@@ -21,27 +20,27 @@ func ReadProcSegmentBits(ctx context.Context, memory znsmemory.ZNSMemory, path s
 }
 
 func WatchProcSegmentBits(ctx context.Context, sig chan os.Signal, memory znsmemory.ZNSMemory, path string) {
-	var lastUpdate, lastReset time.Time
-	tick := time.NewTicker(5 * time.Second)
-	sub := memory.Subscribe()
-	defer memory.UnSubscribe(sub)
+	//var lastUpdate, lastReset time.Time
+	//tick := time.NewTicker(5 * time.Second)
+	//sub := memory.Subscribe()
+	//defer memory.UnSubscribe(sub)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-sig:
 			fmt.Println("reset signal received ...")
-			lastReset = time.Now()
+			//lastReset = time.Now()
 			ReadProcSegmentBits(ctx, memory, path)
-		case <-sub.Event:
-			lastUpdate = time.Now()
-		case <-tick.C:
-			if !lastUpdate.Equal(lastReset) && time.Since(lastUpdate) > 5*time.Second {
-				now := time.Now()
-				lastReset = now
-				lastUpdate = now
-				ReadProcSegmentBits(ctx, memory, path)
-			}
+			//case <-sub.Event:
+			//	lastUpdate = time.Now()
+			//case <-tick.C:
+			//	if !lastUpdate.Equal(lastReset) && time.Since(lastUpdate) > 5*time.Second {
+			//		now := time.Now()
+			//		lastReset = now
+			//		lastUpdate = now
+			//		ReadProcSegmentBits(ctx, memory, path)
+			//	}
 		}
 	}
 }
