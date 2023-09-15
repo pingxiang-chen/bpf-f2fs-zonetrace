@@ -57,9 +57,9 @@ func main() {
 
 	// If procFile exists, start receiving segment bits from it.
 	if isProcFileExist {
-		resetSignal := newResetSignal()
+		//resetSignal := newResetSignal()
 		receiver.ReadProcSegmentBits(ctx, m, procPath)
-		go receiver.WatchProcSegmentBits(ctx, resetSignal, m, procPath)
+		//go receiver.WatchProcSegmentBits(ctx, resetSignal, m, procPath)
 	}
 
 	port := 9090
