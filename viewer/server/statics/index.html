@@ -356,7 +356,8 @@
                 updateCurrentSegmentType(segmentType)
             }
             let color = getSegmentTypeColor(segmentType);
-            lastUpdateZone[zoneNo] = Date.now();
+            const _now = Date.now();
+            lastUpdateZone[zoneNo] = _now
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
