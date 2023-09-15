@@ -137,7 +137,7 @@
      * @param {number} segmentType - The segment type to update
      */
     async function updateCurrentSegmentType(segmentType) {
-        if (lastSegmentType === segmentType) return;
+        if (lastSegmentType === segmentType || segmentType === -2) return;
         lastSegmentType = segmentType;
         curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
     }
@@ -349,6 +349,9 @@
          * @param {number} segmentType - The segmentType that has been updated.
          */
         async function updateZoneSegmentType(zoneNo, segmentType) {
+            if (segmentType === -2) {
+                return
+            }
             if (zoneNo === currentZoneId) {
                 updateCurrentSegmentType(segmentType)
             }

@@ -67,10 +67,23 @@ type ZoneInfo struct {
 }
 
 type Zone struct {
-	ZoneDirtyCount  uint64
-	ZoneNo          int
-	Segments        []Segment
-	LastSegmentType SegmentType
+	ZoneDirtyCount   uint64
+	ZoneNo           int
+	Segments         []Segment
+	LastSegmentType  SegmentType
+	SegmentTypeCount map[SegmentType]int
+}
+
+func (z *Zone) FrequentSegmentType() SegmentType {
+	var maxType SegmentType
+	maxCount := 0
+	for t, count := range z.SegmentTypeCount {
+		if count > maxCount {
+			maxCount = count
+			maxType = t
+		}
+	}
+	return maxType
 }
 
 type ZonedStorage struct {

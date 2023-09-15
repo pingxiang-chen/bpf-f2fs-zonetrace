@@ -118,13 +118,26 @@ func (m *memory) startEventLoop(ctx context.Context) {
 				zoneDirtyCount := zone.ZoneDirtyCount - beforeSegmentDirtyCount + segmentDirtyCount
 				m.zns.Zones[updateSitEntry.ZoneNo].ZoneDirtyCount = zoneDirtyCount
 
-				if zone.LastSegmentType != updateSitEntry.SegmentType {
-					m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = updateSitEntry.SegmentType
+				newSegmentType := updateSitEntry.SegmentType
+				if segmentDirtyCount == 0 {
+					newSegmentType = EmptySegment
+				}
+				if newSegmentType != UnknownSegment {
+					if zone.LastSegmentType != newSegmentType {
+						m.zns.Zones[updateSitEntry.ZoneNo].LastSegmentType = newSegmentType
+					}
+					previousSegmentType := zone.Segments[segmentNo].SegmentType
+					if previousSegmentType != newSegmentType {
+						zone.SegmentTypeCount[newSegmentType]++
+						if previousSegmentType != UnknownSegment {
+							zone.SegmentTypeCount[previousSegmentType]--
+						}
+					}
 				}
 
 				m.zns.Zones[updateSitEntry.ZoneNo].Segments[segmentNo] = Segment{
 					ValidMap:    updateSitEntry.ValidMap,
-					SegmentType: updateSitEntry.SegmentType,
+					SegmentType: newSegmentType,
 					DirtyCount:  segmentDirtyCount,
 				}
 				func() {
@@ -136,7 +149,7 @@ func (m *memory) startEventLoop(ctx context.Context) {
 							sub.Event <- SegmentUpdateEvent{
 								ZoneNo:         updateSitEntry.ZoneNo,
 								SegmentNo:      segmentNo,
-								SegmentType:    updateSitEntry.SegmentType,
+								SegmentType:    newSegmentType,
 								ZoneDirtyCount: zoneDirtyCount,
 							}
 						}()
