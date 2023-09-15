@@ -34,6 +34,7 @@ func WatchProcSegmentBits(ctx context.Context, sig chan os.Signal, memory znsmem
 			lastReset = time.Now()
 			ReadProcSegmentBits(ctx, memory, path)
 		case <-sub.Event:
+			fmt.Println("update!")
 			lastUpdate = time.Now()
 		case <-tick.C:
 			if !lastUpdate.Equal(lastReset) && time.Since(lastUpdate) > 5*time.Second {
