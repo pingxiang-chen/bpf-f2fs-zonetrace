@@ -121,7 +121,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// write goroutine
+	// make new goroutine for write data
 	ctx, cancel := context.WithCancel(r.Context())
 	respBuf := respbuffer.New(ctx)
 	go func() {
@@ -152,7 +152,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error getting zone", http.StatusInternalServerError)
 			return
 		}
-		data := ToZoneResponse(zone.ZoneNo, zone.LastSegmentType, nil)
+		data := ToZoneResponse(zone.ZoneNo, zone.FrequentSegmentType(), nil)
 		if _, err := w.Write(data.Serialize()); err != nil {
 			http.Error(w, "Error writing data", http.StatusInternalServerError)
 			return
@@ -173,8 +173,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			Map:         segment.ValidMap,
 		}
 	}
-	mostFrequentSegmentType := getMostFrequentSegmentType(segments)
-	data := ToZoneResponse(zone.ZoneNo, mostFrequentSegmentType, segments)
+	data := ToZoneResponse(zone.ZoneNo, zone.FrequentSegmentType(), segments)
 	respBuf.Push(data.Serialize())
 
 	// subscribe zone updates
@@ -218,6 +217,11 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			if len(needUpdateSegment) == 0 {
 				continue
 			}
+			zone, err = s.znsMemory.GetZone(currentZoneNo)
+			if err != nil {
+				fmt.Println("Error getting zone", err)
+				continue
+			}
 			segments = make([]Segment, 0, len(needUpdateSegment))
 			for segmentNo := range needUpdateSegment {
 				seg, err := s.znsMemory.GetSegment(currentZoneNo, segmentNo)
@@ -232,8 +236,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 				})
 				delete(needUpdateSegment, segmentNo)
 			}
-			mostFrequentSegmentType = getMostFrequentSegmentType(segments)
-			data = ToZoneResponse(currentZoneNo, mostFrequentSegmentType, segments)
+			data = ToZoneResponse(currentZoneNo, zone.FrequentSegmentType(), segments)
 			respBuf.Push(data.Serialize())
 		}
 	}

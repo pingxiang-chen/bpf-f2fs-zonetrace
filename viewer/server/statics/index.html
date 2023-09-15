@@ -137,7 +137,7 @@
      * @param {number} segmentType - The segment type to update
      */
     async function updateCurrentSegmentType(segmentType) {
-        if (lastSegmentType === segmentType) return;
+        if (lastSegmentType === segmentType || segmentType === -2) return;
         lastSegmentType = segmentType;
         curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
     }
@@ -349,11 +349,15 @@
          * @param {number} segmentType - The segmentType that has been updated.
          */
         async function updateZoneSegmentType(zoneNo, segmentType) {
+            if (segmentType === -2) {
+                return
+            }
             if (zoneNo === currentZoneId) {
                 updateCurrentSegmentType(segmentType)
             }
             let color = getSegmentTypeColor(segmentType);
-            lastUpdateZone[zoneNo] = Date.now();
+            const _now = Date.now();
+            lastUpdateZone[zoneNo] = _now
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
@@ -361,11 +365,11 @@
             cell.style("fill", color)
 
             // Change it back to black after 1 second when it has been updated
-            // setTimeout(() => {
-            //     if (lastUpdateZone[zoneNo] === _now) {
-            //         cell.style("fill", "black")
-            //     }
-            // }, 1000)
+            setTimeout(() => {
+                if (lastUpdateZone[zoneNo] === _now) {
+                    cell.style("fill", "black")
+                }
+            }, 1000)
         }
 
 

@@ -52,12 +52,8 @@ func main() {
 		isProcFileExist = true
 	}
 
-	port := 9090
 	ctx := newSignalContext()          // Create a signal context for managing signals.
 	m := znsmemory.New(ctx, *zoneInfo) // Create a new in-memory store to save all updates.
-
-	// Start receiving traces from standard input.
-	receiver.NewTraceReceiver(m).StartReceive(ctx, stdioReader)
 
 	// If procFile exists, start receiving segment bits from it.
 	if isProcFileExist {
@@ -65,6 +61,10 @@ func main() {
 		receiver.ReadProcSegmentBits(ctx, m, procPath)
 		go receiver.WatchProcSegmentBits(ctx, resetSignal, m, procPath)
 	}
+
+	port := 9090
+	// Start receiving traces from standard input.
+	receiver.NewTraceReceiver(m).StartReceive(ctx, stdioReader)
 
 	// Create an HTTP server
 	srv := server.New(ctx, m, port)

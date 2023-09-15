@@ -57,3 +57,5 @@ echo "$MAIN_BLKADDR $START_BLKADDR $ZNS_DEVICE $REGULAR_DEVICE" > $BLKADDR_FILE
 
 # 7. Mount f2fs
 mount -t f2fs /dev/$REGULAR_DEVICE $MOUNT_POINT
+
+pkill -SIGHUP viewer
