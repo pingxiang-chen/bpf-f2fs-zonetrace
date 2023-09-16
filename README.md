@@ -2,7 +2,11 @@
 
 ZoneTrace is an eBPF-based program that can visualize the space management of each zone on F2FS on ZNS SSDs in real-time without any kernel modification. We believe ZoneTrace can help users analyze F2FS with ease and open up several interesting research topics on ZNS SSDs.
 
-**_Here's our demo video: [link](https://www.youtube.com/watch?v=XxQWOVAtDSo)_**
+**_Here's our 7 mins ESSC Presentation video: [link](https://www.youtube.com/watch?v=vtH14x1wqus)_**
+
+[![thumbnail](https://img.youtube.com/vi/XxQWOVAtDSo/0.jpg)](https://www.youtube.com/watch?v=vtH14x1wqus)
+
+**_Here's our demo video for quick setup: [link](https://www.youtube.com/watch?v=XxQWOVAtDSo)_**
 
 [![thumbnail](https://img.youtube.com/vi/XxQWOVAtDSo/0.jpg)](https://www.youtube.com/watch?v=XxQWOVAtDSo)
 
