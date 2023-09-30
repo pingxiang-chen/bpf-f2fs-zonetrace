@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/encoding/protodelim"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 type ZoneInfoResponse struct {
@@ -61,4 +62,9 @@ func (z *ZoneResponse) Serialize() []byte {
 		panic(fmt.Errorf("error serializing segment response: %v", err))
 	}
 	return buf.Bytes()
+}
+
+type zoneNoSegmentTypePair struct {
+	ZoneNo      int
+	SegmentType znsmemory.SegmentType
 }

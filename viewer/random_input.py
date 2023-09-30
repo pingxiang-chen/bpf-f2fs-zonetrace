@@ -23,5 +23,6 @@ if __name__ == '__main__':
         buf.write(seg_type.to_bytes(4, 'little'))
         buf.write(secrets.token_bytes(64))
         sys.stdout.buffer.write(read_buf(buf))
+        sys.stdout.flush()
         buf.seek(0)
 #         time.sleep(0.01)

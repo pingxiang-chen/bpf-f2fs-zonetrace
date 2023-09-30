@@ -180,7 +180,7 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	sub := s.znsMemory.Subscribe()
 	defer s.znsMemory.UnSubscribe(sub)
 	needUpdateSegment := make(map[int]struct{})
-	lastZoneSegmentType := make(map[int]znsmemory.SegmentType)
+	lastZoneUpdateTime := make(map[zoneNoSegmentTypePair]time.Time)
 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	go func() {
@@ -202,14 +202,14 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// for update segment type
-			previousSegmentType, ok := lastZoneSegmentType[update.ZoneNo]
-			if ok {
-				if previousSegmentType == segmentType {
-					continue
-				}
+			now := time.Now()
+			updatedZone := zoneNoSegmentTypePair{ZoneNo: update.ZoneNo, SegmentType: segmentType}
+			last := lastZoneUpdateTime[updatedZone]
+			// skip send updates if last update of same zoneNo is less than 500ms
+			if now.Sub(last) < 500*time.Millisecond {
+				continue
 			}
-			lastZoneSegmentType[update.ZoneNo] = segmentType
-
+			lastZoneUpdateTime[updatedZone] = now
 			// notice only zone number
 			data = ToZoneResponse(update.ZoneNo, segmentType, nil)
 			respBuf.Push(data.Serialize())
