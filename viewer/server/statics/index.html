@@ -31,6 +31,16 @@
             margin-right: 10px;
         }
 
+        .cell-size-input {
+            width: 4ch;
+            padding: 0 5px;
+        }
+
+        .block-size-input {
+            width: 8ch;
+            padding: 0 5px;
+        }
+
     </style>
     <script src="https://d3js.org/d3.v7.js"></script>
     <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
@@ -43,6 +53,15 @@
     <!-- left side. map of blocks -->
     <div class="column">
         <div>Blocks of Zone <b id="curZoneNum"></b> (<span id="curSegType"></span>)</div>
+        <div>
+            <label for="cellSizeInput">CellSize</label>
+            <input type="number" id="cellSizeInput" class="cell-size-input" value="1" step="1" min="1"
+                   onchange="onChangeCellSize()">
+
+            <label for="blocksPerLineInput">BlocksPerLine</label>
+            <input type="number" id="blocksPerLineInput" class="block-size-input" value="0" step="1" min="1"
+                   onchange="onChangeBlockSize()">
+        </div>
         <canvas id="chartCanvas"></canvas>
     </div>
 
@@ -51,7 +70,7 @@
         <div id="color-indexes">
             <h4>Color Index</h4>
             <div class="index-item">
-                <div class="color-box" style="background-color: gray;"></div>
+                <div class="color-box" style="background-color: rgb(128,128,128);"></div> <!-- gray -->
                 <div>Unknown</div>
             </div>
             <div class="index-item">
@@ -89,6 +108,10 @@
 
 
 <script>
+    let cellSize = 1;
+    let blocksPerLine = 0;
+    let zoomLevel = 1;
+
     const currentZoneId = Number(document.location.pathname.slice(6)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
     let lastSegmentType = -2; // -2: NotChanged
     const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
@@ -142,6 +165,31 @@
         curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
     }
 
+    function getDivisors(num) {
+        const divisors = [];
+        for (let i = 1; i <= Math.sqrt(num); i++) {
+            if (num % i === 0) {
+                divisors.push(i);
+                if (num / i !== i) divisors.push(num / i);
+            }
+        }
+        // divisors.sort((a, b) => a - b);
+        return divisors;
+    }
+
+    const onChangeCellSize = () => {
+        cellSize = Number(document.getElementById('cellSizeInput').value);
+        reDrawCanvas();
+    }
+
+    let onChangeBlockSize = () => {
+        // it will be re-declared later
+    }
+
+    let reDrawCanvas = async () => {
+        // it will be re-declared later
+    };
+
     /**
      * Main function.
      * Performs major logic and initializes the page and data display.
@@ -150,24 +198,72 @@
         const info = await getZoneInfo(currentZoneId);
         document.getElementById('curZoneNum').innerText = String(currentZoneId);
         updateCurrentSegmentType(info.last_segment_type);
+        const bitmapSize = info.block_per_segment;
+        const maxSegmentNumber = info.total_segment_per_zone;
+
+        // set blocksPerLineInput
+        const blocksPerLineInput = document.getElementById('blocksPerLineInput');
+        blocksPerLine = bitmapSize
+        blocksPerLineInput.value = bitmapSize;
+        blocksPerLineInput.setAttribute("max", bitmapSize);
+        const blockDivisors = getDivisors(bitmapSize);
+        onChangeBlockSize = () => {
+            const currentValue = Number(blocksPerLineInput.value);
+            const isIncreased = blocksPerLine < currentValue;
+            let next;
+            if (isIncreased) {
+                next = (blockDivisors.filter(d => d >= currentValue).sort((a, b) => a - b))[0];
+            } else {
+                next = (blockDivisors.filter(d => d <= currentValue).sort((a, b) => b - a))[0];
+            }
+            blocksPerLine = next;
+            blocksPerLineInput.value = blocksPerLine;
+            zoomLevel = bitmapSize / blocksPerLine;
+            reDrawCanvas();
+        }
 
         /* ---------- Draw the canvas representing zone's blocks ---------- */
 
-        // Canvas size and cell size
-        const canvasWidth = info.block_per_segment;
-        const canvasHeight = info.total_segment_per_zone;
-        const cellSize = 1;
+        // Canvas size
+        let canvasRowSize = bitmapSize / zoomLevel;
+        let canvasColSize = maxSegmentNumber * zoomLevel;
 
         // Create the canvas
-        const canvas = d3.select("#chartCanvas")
-            .attr("width", canvasWidth * cellSize)
-            .attr("height", canvasHeight * cellSize)
+        let canvas = d3.select("#chartCanvas")
+            .attr("width", canvasRowSize * cellSize)
+            .attr("height", canvasColSize * cellSize)
             .node();
-        const context = canvas.getContext("2d");
+        let context = canvas.getContext("2d");
 
-        const cellColorMap = Array.from({length: canvasHeight}, () => {
-            return Array.from({length: canvasWidth});
-        });
+        reDrawCanvas = async () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            canvasRowSize = bitmapSize / zoomLevel;
+            canvasColSize = maxSegmentNumber * zoomLevel;
+            canvas = d3.select("#chartCanvas")
+                .attr("width", canvasRowSize * cellSize)
+                .attr("height", canvasColSize * cellSize)
+                .node();
+            context = canvas.getContext("2d");
+            cellColorMap.forEach((color, i) => {
+                const [xPos, yPos] = getDrawPos(Math.floor(i / bitmapSize), i % bitmapSize, zoomLevel)
+                context.fillStyle = color;
+                context.fillRect(xPos, yPos, cellSize, cellSize);
+            })
+        }
+
+        const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "white");
+
+        function getColorMapIndex(segmentNumber, bitmapIndex) {
+            return segmentNumber * bitmapSize + bitmapIndex;
+        }
+
+        function getDrawPos(segmentNumber, bitmapIndex) {
+            let index1D = segmentNumber * bitmapSize + bitmapIndex;
+            let newRowSize = bitmapSize / zoomLevel;
+            let yPos = Math.floor(index1D / newRowSize);
+            let xPos = index1D % newRowSize;
+            return [xPos * cellSize, yPos * cellSize];
+        }
 
         /**
          * Draw a segment's information on the canvas.
@@ -184,12 +280,12 @@
                 } else if (d === -1) {
                     color = "white";
                 }
-                if (cellColorMap[y][i] === color) {
+                const colorIndex = getColorMapIndex(y, i);
+                if (cellColorMap[colorIndex] === color) {
                     return;
                 }
-                cellColorMap[y][i] = color;
-                const xPos = i * cellSize;
-                const yPos = y * cellSize;
+                cellColorMap[colorIndex] = color;
+                const [xPos, yPos] = getDrawPos(y, i)
                 context.fillStyle = color;
                 context.fillRect(xPos, yPos, cellSize, cellSize);
             });
@@ -411,19 +507,19 @@
                     }
                     // Draw with the bitmap data of each segment
                     zone.segments.forEach((segment, _) => {
-                        let row = [];
+                        let segmentBitmap = [];
                         if (segment.map) {
                             for (let b of Object.values(segment.map)) {
                                 for (let i = 0; i < 8; i++) {
-                                    row.push((b >> i) & 1);
+                                    segmentBitmap.push((b >> i) & 1);
                                 }
                             }
                         } else {
-                            row = Array.from({length: info.block_per_segment}, () => -1);
+                            segmentBitmap = Array.from({length: info.block_per_segment}, () => -1);
                         }
                         const ping = Date.now() - zone.time;
-                        console.log(`received ${segment.segmentNo}, ping: ${ping}ms`)
-                        drawChart(row, segment.segmentNo, segment.segmentType);
+                        // console.log(`received ${segment.segmentNo}, ping: ${ping}ms`)
+                        drawChart(segmentBitmap, segment.segmentNo, segment.segmentType);
                     })
                 }
             }
