@@ -354,4 +354,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Exploration results
+exploration/results/*
+exploration/fragsize/*
+exploration/fragdistance/*
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,python,venv,virtualenv,intellij+all

@@ -72,9 +72,12 @@ int handle_event(void *ctx, void *data, size_t data_sz) {
     buf[0] = calculated_segno;
     buf[1] = cur_zone;
     buf[2] = e->seg_type;
+    
+    if(!DEBUG){
+        write(1, buf, 12);
+        write(1, e->cur_valid_map, 64);
+    }
 
-    write(1, buf, 12);
-    write(1, e->cur_valid_map, 64);
     return 0;
 }
 
