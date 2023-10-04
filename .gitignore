@@ -359,4 +359,7 @@ exploration/results/*
 exploration/fragsize/*
 exploration/fragdistance/*
 
+# fiemap
+fiemap/tags
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,python,venv,virtualenv,intellij+all
