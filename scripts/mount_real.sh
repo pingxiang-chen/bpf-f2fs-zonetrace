@@ -44,3 +44,5 @@ START_BLKADDR=$(cat $MKFS_LOG_FILE | awk '/start_blkaddr/ {print $2}')
 echo "$MAIN_BLKADDR $START_BLKADDR $ZNS_DEVICE $REGULAR_DEVICE" > $BLKADDR_FILE
 
 mount -t f2fs /dev/$REGULAR_DEVICE $MOUNT_POINT
+
+pkill -SIGHUP viewer && sleep 1

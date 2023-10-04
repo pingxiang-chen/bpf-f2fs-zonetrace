@@ -1,0 +1,39 @@
+#!/usr/bin/bpftrace
+/*
+ * block Trace block layer.
+ * 		For Linux, uses bpftrace and eBPF.
+ *
+ * block traces important function in the block layer
+ *
+ * Copyright (c) 2023 Ping-Xiang Chen.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * 13-Sep-2023	Ping-Xiang Chen	created this.
+ */
+
+BEGIN
+{
+	printf("Tracing block layer... Hit Ctrl-C to end.\n");
+} 
+
+/*kprobe:bio_split_rw
+{
+	printf("kprobe:bio_split_rw: max_bytes=%d\n", arg5);
+}*/
+
+/*kprobe:__bio_split_to_limits
+{
+	printf("kprobe:__bio_split_to_limits: nr_segs=%d\n", *arg3);
+}*/
+
+
+
+kprobe:bvec_split_segs
+{
+	printf("kprobe:bvec_split_segs: nsegs=%d, bytes=%d, max_segs=%d\n", *arg3, *arg4, arg5);
+}
+
+/*kprobe:blk_queue_max_segments
+{
+	printf("kprobe:blk_queue_max_segments\n");
+}*/

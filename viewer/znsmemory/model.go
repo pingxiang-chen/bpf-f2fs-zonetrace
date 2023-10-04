@@ -66,6 +66,16 @@ type ZoneInfo struct {
 	AvailableSegmentPerZone int
 }
 
+type FileInfo struct {
+	FileSegments []FileSegment
+}
+
+type FileSegment struct {
+	ZoneIndex    int
+	SegmentIndex int
+	ValidMap     ValidMap // 해당하는것을 1로 바꾼 512bit
+}
+
 type Zone struct {
 	ZoneDirtyCount   uint64
 	ZoneNo           int

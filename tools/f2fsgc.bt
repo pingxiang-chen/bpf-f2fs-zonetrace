@@ -36,7 +36,6 @@ kretprobe:get_victim_by_default
 	printf(" ret=%d\n", retval);
 }
 
-
 kprobe:f2fs_invalidate_blocks
 {
 	printf("addr=%u\n", arg1);
