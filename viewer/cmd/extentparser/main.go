@@ -1,4 +1,4 @@
-package extentparser
+package main
 
 import (
 	"errors"
@@ -179,13 +179,13 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 }
 
 func main() {
-	info, err := get_zns_info("nvme0n1p3", "nvme1n1")
+	info, err := get_zns_info("nvme4n1p1", "nvme3n1")
 	if err != nil {
 		fmt.Printf("zns info:%s\n", err)
 		return
 	}
 	fmt.Printf("%#v\n", info)
-	extents, err := get_extents("/mnt/f2fs/normal.0.0.jpg")
+	extents, err := get_extents("/mnt/f2fs/normal.0.0")
 	if err != nil {
 		fmt.Printf("extents:%s\n", err)
 		return
@@ -197,7 +197,7 @@ func main() {
 		fmt.Printf("%s\n", err)
 		return
 	}
-	fileInfo, err := getFileInfo("nvme0n1p3", "nvme1n1", "/mnt/f2fs/normal.0.0.jpg")
+	fileInfo, err := getFileInfo("/mnt/f2fs/normal.0.0", "nvme4n1p1", "nvme3n1")
 	if err != nil {
 		fmt.Printf("fileinfo%s\n", err)
 		return
