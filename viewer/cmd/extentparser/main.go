@@ -163,9 +163,9 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 	}
 	fileInfo := znsmemory.FileInfo{}
 	for i := 0; i < len(extents); i++ {
-		zoneAddress := (extents[i].physical - info.zns_start_blkaddr)
-		zoneNo := zoneAddress / info.zone_blocks
-		zoneOffset := zoneAddress - (zoneNo * info.zone_blocks)
+		zoneAddress := (extents[i].physical - (info.zns_start_blkaddr * 4096))
+		zoneNo := zoneAddress / (info.zone_blocks * 4096)
+		zoneOffset := zoneAddress - (zoneNo * (info.zone_blocks * 4096))
 		segmentNo := zoneOffset / (2 * 1024 * 1024)
 		// segmentOffset := zoneOffset - (segmentNo * (2*1024*1024))
 		fileSegment := znsmemory.FileSegment{
