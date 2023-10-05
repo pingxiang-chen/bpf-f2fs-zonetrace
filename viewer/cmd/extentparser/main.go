@@ -1,4 +1,4 @@
-package main
+package extentparser
 
 import (
 	"errors"
@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"syscall"
 	"unsafe"
+
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
 const (
@@ -149,16 +151,43 @@ func get_extents(path string) ([]extent, error) {
 	return extents, nil
 }
 
+func getFileInfo(path string, regular_device string, zns_device string) (znsmemory.FileInfo, error) {
+	info, err := get_zns_info(regular_device, zns_device)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return znsmemory.FileInfo{}, err
+	}
+	extents, err := get_extents(path)
+	if err != nil {
+		return znsmemory.FileInfo{}, err
+	}
+	fileInfo := znsmemory.FileInfo{}
+	for i := 0; i < len(extents); i++ {
+		zoneAddress := (extents[i].physical - info.zns_start_blkaddr)
+		zoneNo := zoneAddress / info.zone_blocks
+		zoneOffset := zoneAddress - (zoneNo * info.zone_blocks)
+		segmentNo := zoneOffset / (2 * 1024 * 1024)
+		// segmentOffset := zoneOffset - (segmentNo * (2*1024*1024))
+		fileSegment := znsmemory.FileSegment{
+			ZoneIndex:    int(zoneNo),
+			SegmentIndex: int(segmentNo),
+			ValidMap:     znsmemory.ValidMap{},
+		}
+		fileInfo.FileSegments = append(fileInfo.FileSegments, fileSegment)
+	}
+	return fileInfo, nil
+}
+
 func main() {
 	info, err := get_zns_info("nvme0n1p3", "nvme1n1")
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		fmt.Printf("zns info:%s\n", err)
 		return
 	}
 	fmt.Printf("%#v\n", info)
 	extents, err := get_extents("/mnt/f2fs/normal.0.0.jpg")
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		fmt.Printf("extents:%s\n", err)
 		return
 	}
 	fmt.Printf("%#v\n", extents[len(extents)-1])
@@ -168,5 +197,11 @@ func main() {
 		fmt.Printf("%s\n", err)
 		return
 	}
+	fileInfo, err := getFileInfo("nvme0n1p3", "nvme1n1", "/mnt/f2fs/normal.0.0.jpg")
+	if err != nil {
+		fmt.Printf("fileinfo%s\n", err)
+		return
+	}
+	fmt.Printf("%#v\n", fileInfo)
 	fmt.Println(files)
 }
