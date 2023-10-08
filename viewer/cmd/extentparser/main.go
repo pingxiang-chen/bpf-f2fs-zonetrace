@@ -151,6 +151,11 @@ func get_extents(path string) ([]extent, error) {
 	return extents, nil
 }
 
+/**
+ * path: file path to highlight
+ * regular_device: f2fs regular device. ex) nvme0n1p1
+ * zns_device: f2fs zns device. ex) nvme1n1
+ */
 func getFileInfo(path string, regular_device string, zns_device string) (znsmemory.FileInfo, error) {
 	info, err := get_zns_info(regular_device, zns_device)
 	if err != nil {
@@ -162,16 +167,35 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 		return znsmemory.FileInfo{}, err
 	}
 	fileInfo := znsmemory.FileInfo{}
+	// znsinfo is 4k block aligned
+	// extents is byte aligned
 	for i := 0; i < len(extents); i++ {
-		zoneAddress := (extents[i].physical - (info.zns_start_blkaddr * 4096))
-		zoneNo := zoneAddress / (info.zone_blocks * 4096)
-		zoneOffset := zoneAddress - (zoneNo * (info.zone_blocks * 4096))
-		segmentNo := zoneOffset / (2 * 1024 * 1024)
+		physicalAddressBlkAddr := extents[i].physical / 4096
+		extentsBlkLen := extents[i].length / 4096
+		zoneAddress := physicalAddressBlkAddr - info.zns_start_blkaddr
+		zoneNo := zoneAddress / info.zone_blocks
+		zoneOffset := zoneAddress % info.zone_blocks
+		segmentNo := zoneOffset / 512 // 512 block per segment
+		segmentStart := zoneOffset % 512
+		if segmentStart+extentsBlkLen > 512 {
+			fmt.Printf("segment limit exceeded %d %d\n", segmentNo, extentsBlkLen)
+		}
+		vmap := znsmemory.ValidMap{}
+		for b := 0; b < 64; b++ {
+			cur := byte(0)
+			for bit := 0; bit < 8; bit++ {
+				offset := b*8 + bit
+				if segmentStart <= uint64(offset) && uint64(offset) <= segmentStart+extentsBlkLen {
+					cur |= (1 << bit)
+				}
+			}
+			vmap = append(vmap, cur)
+		}
 		// segmentOffset := zoneOffset - (segmentNo * (2*1024*1024))
 		fileSegment := znsmemory.FileSegment{
 			ZoneIndex:    int(zoneNo),
 			SegmentIndex: int(segmentNo),
-			ValidMap:     znsmemory.ValidMap{},
+			ValidMap:     vmap,
 		}
 		fileInfo.FileSegments = append(fileInfo.FileSegments, fileSegment)
 	}
