@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -151,6 +152,30 @@ func get_extents(path string) ([]extent, error) {
 	return extents, nil
 }
 
+type fibmap struct {
+	file_pos  int
+	start_blk int
+	end_blk   int
+	blks      int
+}
+
+func parseFibmap(output_lines []string) []fibmap {
+	var fibmaps []fibmap
+	for i := 0; i < len(output_lines); i++ {
+		file_pos, start_blk, end_blk, blks := 0, 0, 0, 0
+		fmt.Sscanf(output_lines[i], "%d %d %d %d", &file_pos, &start_blk, &end_blk, &blks)
+		if blks != 0 {
+			fibmaps = append(fibmaps, fibmap{
+				file_pos:  file_pos,
+				start_blk: start_blk,
+				end_blk:   end_blk,
+				blks:      blks,
+			})
+		}
+	}
+	return fibmaps
+}
+
 /**
  * path: file path to highlight
  * regular_device: f2fs regular device. ex) nvme0n1p1
@@ -162,70 +187,77 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 		fmt.Printf("%s\n", err)
 		return znsmemory.FileInfo{}, err
 	}
-	extents, err := get_extents(path)
+	cmd := exec.Command("fibmap.f2fs", path)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
+		fmt.Printf("fibmap err: %s\n", err)
 		return znsmemory.FileInfo{}, err
 	}
 	fileInfo := znsmemory.FileInfo{}
-	// znsinfo is 4k block aligned
-	// extents is byte aligned
-	for i := 0; i < len(extents); i++ {
-		physicalAddressBlkAddr := extents[i].physical / 4096
-		extentsBlkLen := extents[i].length / 4096
-		zoneAddress := physicalAddressBlkAddr - info.zns_start_blkaddr
-		zoneNo := zoneAddress / info.zone_blocks
-		zoneOffset := zoneAddress % info.zone_blocks
-		segmentNo := zoneOffset / 512 // 512 block per segment
-		segmentStart := zoneOffset % 512
-		if segmentStart+extentsBlkLen > 512 {
-			fmt.Printf("segment limit exceeded %d %d\n", segmentNo, extentsBlkLen)
-		}
-		vmap := znsmemory.ValidMap{}
-		for b := 0; b < 64; b++ {
-			cur := byte(0)
-			for bit := 0; bit < 8; bit++ {
-				offset := b*8 + bit
-				if segmentStart <= uint64(offset) && uint64(offset) <= segmentStart+extentsBlkLen {
-					cur |= (1 << bit)
-				}
+	output := string(out)
+	// fmt.Println(output)
+	zoneSize := info.zone_blocks * 4 / 1024 // MiB
+	segPerZone := zoneSize / 2              // MiB
+	output_lines := strings.Split(output, "\n")
+	fibmaps := parseFibmap(output_lines)
+	sitMap := make(map[int][]byte)
+	for _, fibmap := range fibmaps {
+		segNo := fibmap.start_blk / 512 // 512block per segment (4K * 512 = 2M segment)
+		// endSegNo := fibmap.end_blk / 512
+		sentryStartOffset := fibmap.start_blk % 512
+		sentryEndOffset := sentryStartOffset + fibmap.blks
+		for offset := sentryStartOffset; offset < sentryEndOffset; offset++ {
+			// get sit and update data
+			byteOffset := offset / 8
+			curSegNo := segNo + (byteOffset / 64)
+			byteOffset %= 64
+			bitOffset := offset % 8
+			if byteOffset >= 64 {
+
 			}
-			vmap = append(vmap, cur)
+			sit, ok := sitMap[curSegNo]
+			if !ok {
+				sitMap[curSegNo] = make([]byte, 64)
+				sit = sitMap[curSegNo]
+			}
+			sit[byteOffset] |= 1 << (7 - bitOffset)
 		}
-		// segmentOffset := zoneOffset - (segmentNo * (2*1024*1024))
-		fileSegment := znsmemory.FileSegment{
-			ZoneIndex:    int(zoneNo),
-			SegmentIndex: int(segmentNo),
-			ValidMap:     vmap,
-		}
-		fileInfo.FileSegments = append(fileInfo.FileSegments, fileSegment)
+	}
+	for segNo, sit := range sitMap {
+		curZone := segNo / int(segPerZone)
+		fileInfo.FileSegments = append(fileInfo.FileSegments, znsmemory.FileSegment{
+			ZoneIndex:    curZone,
+			SegmentIndex: segNo,
+			ValidMap:     sit,
+		})
 	}
 	return fileInfo, nil
 }
 
 func main() {
-	info, err := get_zns_info("nvme4n1p1", "nvme3n1")
-	if err != nil {
-		fmt.Printf("zns info:%s\n", err)
-		return
-	}
-	fmt.Printf("%#v\n", info)
-	extents, err := get_extents("/mnt/f2fs/normal.0.0")
-	if err != nil {
-		fmt.Printf("extents:%s\n", err)
-		return
-	}
-	fmt.Printf("%#v\n", extents[len(extents)-1])
-	// fmt.Printf("%#v\n", extents)
-	files, err := dir_list("/mnt/f2fs/")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		return
-	}
-	fileInfo, err := getFileInfo("/mnt/f2fs/normal.0.0", "nvme4n1p1", "nvme3n1")
+	// info, err := get_zns_info("nvme4n1p1", "nvme3n1")
+	// if err != nil {
+	// 	fmt.Printf("zns info:%s\n", err)
+	// 	return
+	// }
+	// fmt.Printf("%#v\n", info)
+	// extents, err := get_extents("/mnt/f2fs/normal.0.0")
+	// if err != nil {
+	// 	fmt.Printf("extents:%s\n", err)
+	// 	return
+	// }
+	// fmt.Printf("%#v\n", extents[len(extents)-1])
+	// // fmt.Printf("%#v\n", extents)
+	// files, err := dir_list("/mnt/f2fs/")
+	// if err != nil {
+	// 	fmt.Printf("%s\n", err)
+	// 	return
+	// }
+	fileInfo, err := getFileInfo("/mnt/f2fs/target_file.png", "nvme4n1p1", "nvme3n1")
 	if err != nil {
 		fmt.Printf("fileinfo%s\n", err)
 		return
 	}
 	fmt.Printf("%#v\n", fileInfo)
-	fmt.Println(files)
+	// fmt.Println(files)
 }
