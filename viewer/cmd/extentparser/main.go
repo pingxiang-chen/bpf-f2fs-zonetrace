@@ -75,8 +75,8 @@ func getZnsInfo(regularDevice string, znsDevice string) (znsInfo, error) {
 		return znsInfo{}, err
 	}
 	output := string(out)
-	znsBlkaddrPattern := regexp.MustCompile(fmt.Sprintf(`/dev/%s blkaddr = (\w+)`, znsDevice))
-	match := znsBlkaddrPattern.FindStringSubmatch(output)
+	znsBlkAddrPattern := regexp.MustCompile(fmt.Sprintf(`/dev/%s blkaddr = (\w+)`, znsDevice))
+	match := znsBlkAddrPattern.FindStringSubmatch(output)
 	if len(match) < 2 {
 		return znsInfo{}, errors.New("Cannot find zns blk addr")
 	}
@@ -181,8 +181,8 @@ func parseFibmap(output_lines []string) []fibmap {
  * regular_device: f2fs regular device. ex) nvme0n1p1
  * zns_device: f2fs zns device. ex) nvme1n1
  */
-func getFileInfo(path string, regular_device string, zns_device string) (znsmemory.FileInfo, error) {
-	info, err := getZnsInfo(regular_device, zns_device)
+func getFileInfo(path string, regularDevice string, znsDevice string) (znsmemory.FileInfo, error) {
+	info, err := getZnsInfo(regularDevice, znsDevice)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return znsmemory.FileInfo{}, err
