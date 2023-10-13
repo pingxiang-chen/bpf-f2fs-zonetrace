@@ -42,7 +42,7 @@ func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 // staticsHandler serves static files.\
 func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse /static/:filename
-	staticFileName := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
+	staticFileName := r.RequestURI[strings.Index(r.RequestURI, "/static/")+8:]
 	staticFile, ok := statics.StaticFileMap[staticFileName]
 	if !ok {
 		http.Error(w, "Not found", http.StatusNotFound)
