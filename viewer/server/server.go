@@ -83,6 +83,7 @@ func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
 // highlightHandler handles the highlight URL, redirecting to "/highlight/0".
 func (s *api) highlightHandler(w http.ResponseWriter, r *http.Request) {
 	pk := r.RequestURI[strings.LastIndex(r.RequestURI, "/")+1:]
+	fmt.Printf("pk: %s\n", pk)
 	if pk != "" {
 		http.Redirect(w, r, "/highlight/0", http.StatusFound)
 		return
