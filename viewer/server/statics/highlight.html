@@ -108,11 +108,27 @@
 
 
 <script>
+    /**
+     * Get the last segment from the specified URL path.
+     *
+     * This function takes a URL as an argument, splits it into segments,
+     * and returns the last non-empty segment.
+     *
+     * @param {string} url - The URL to be parsed.
+     * @returns {string} - The last non-empty segment of the URL.
+     */
+    function getLastPathSegment(url) {
+        const segments = url.split('/');
+        // Return the last segment. If the last character is '/',
+        // it will return an empty string, so return the second last segment instead
+        return segments.pop() || segments.pop();
+    }
+
     let cellSize = 1;
     let blocksPerLine = 0;
     let zoomLevel = 1;
 
-    const currentZoneId = Number(document.location.pathname.slice(6)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
+    const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
     let lastSegmentType = -2; // -2: NotChanged
     const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
 
