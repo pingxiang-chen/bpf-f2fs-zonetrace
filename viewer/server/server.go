@@ -90,13 +90,6 @@ func (s *api) highlightHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// fiemapHandler handles the fiemap api
-func (s *api) fiemapHandler(w http.ResponseWriter, r *http.Request) {
-	// check "path" parameter from request
-	path := r.URL.Query().Get("path")
-	fmt.Println("path:", path)
-}
-
 // getMostFrequentSegmentType finds the most frequent segment type
 func getMostFrequentSegmentType(segments []Segment) znsmemory.SegmentType {
 	countSegmentType := make(map[znsmemory.SegmentType]int)
@@ -281,9 +274,7 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 	handler.HandleFunc("/api/info/", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
 	handler.HandleFunc("/static/", a.staticsHandler)
-	// Highlight api
 	handler.HandleFunc("/highlight/", a.highlightHandler)
-	handler.HandleFunc("/api/fiemap/", a.fiemapHandler)
 	handler.HandleFunc("/", a.indexHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
