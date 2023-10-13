@@ -45,6 +45,7 @@ func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
 	staticFileName := r.RequestURI[strings.Index(r.RequestURI, "/static/")+8:]
 	staticFile, ok := statics.StaticFileMap[staticFileName]
 	if !ok {
+		fmt.Println("Not found static file:", staticFileName)
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
