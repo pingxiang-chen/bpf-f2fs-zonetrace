@@ -41,10 +41,27 @@
             padding: 0 5px;
         }
 
+        /* 파일 탐색기 스타일을 정의합니다. */
+        .file-info {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .file-size {
+            margin-left: 10px;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
     </style>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.css">
     <script src="https://d3js.org/d3.v7.js"></script>
     <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
     <script src="/static/js/tracer.js"></script>
+    <script src="/static/js/explorer.js"></script>
 </head>
 <body style="background-color: #f3f3f3">
 
@@ -99,6 +116,9 @@
                 <div>Cold Node</div>
             </div>
         </div>
+
+        <!-- 파일 및 폴더 목록을 표시할 UI 컨테이너입니다. -->
+        <div class="ui list" id="file-system"></div>
     </div>
 
     <!-- right side. zone list -->

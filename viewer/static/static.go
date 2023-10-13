@@ -21,18 +21,25 @@ var HighlightHtmlFile []byte
 //go:embed js/tracer.js
 var tracerJsFile []byte
 
-type StaticFile struct {
+//go:embed js/explorer.js
+var explorerJsFile []byte
+
+type ServingFile struct {
 	File        []byte
 	ContentType string
 }
 
-var StaticFileMap = map[string]StaticFile{
+var ServingFileMap = map[string]ServingFile{
 	"zns.proto": {
 		File:        protos.SegmentProtoFile,
 		ContentType: "text/plain",
 	},
 	"js/tracer.js": {
 		File:        tracerJsFile,
+		ContentType: "text/javascript",
+	},
+	"js/explorer.js": {
+		File:        explorerJsFile,
 		ContentType: "text/javascript",
 	},
 }
