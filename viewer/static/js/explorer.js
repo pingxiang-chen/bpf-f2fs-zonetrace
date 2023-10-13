@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     // 예시 파일 시스템 데이터
     const fileSystem = [
-        {type: 'up', name: '..'},
+        {type: 'arrow left', name: '..'},
         {
             type: 'folder',
             name: 'Documents',
