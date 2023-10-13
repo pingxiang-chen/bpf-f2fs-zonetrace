@@ -11,7 +11,7 @@ import (
 //go:embed index.html
 var IndexHtmlFile []byte
 
-// HighlightHtmlFile reads the 'hightlight.html' file and stores its bytes.
+// HighlightHtmlFile reads the 'highlight.html' file and stores its bytes.
 //
 //go:embed highlight.html
 var HighlightHtmlFile []byte
