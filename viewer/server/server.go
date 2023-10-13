@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/statics"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/static"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
@@ -32,7 +32,7 @@ func (s *api) indexHandler(w http.ResponseWriter, r *http.Request) {
 // htmlHandler serves HTML content.
 func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	_, err := w.Write(statics.IndexHtmlFile)
+	_, err := w.Write(static.IndexHtmlFile)
 	if err != nil {
 		http.Error(w, "Error writing data", http.StatusInternalServerError)
 		return
@@ -43,9 +43,8 @@ func (s *api) htmlHandler(w http.ResponseWriter, r *http.Request) {
 func (s *api) staticsHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse /static/:filename
 	staticFileName := r.RequestURI[strings.Index(r.RequestURI, "/static/")+8:]
-	staticFile, ok := statics.StaticFileMap[staticFileName]
+	staticFile, ok := static.StaticFileMap[staticFileName]
 	if !ok {
-		fmt.Println("Not found static file:", staticFileName)
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
@@ -89,7 +88,7 @@ func (s *api) highlightHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html")
-	_, err := w.Write(statics.HighlightHtmlFile)
+	_, err := w.Write(static.HighlightHtmlFile)
 	if err != nil {
 		http.Error(w, "Error writing data", http.StatusInternalServerError)
 		return
