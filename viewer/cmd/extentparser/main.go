@@ -25,8 +25,8 @@ const (
 )
 
 type znsInfo struct {
-	znsStartBlkAddr uint64
-	zoneBlocks      uint64
+	ZnsStartBlkAddr uint64
+	ZoneBlocks      uint64
 }
 
 type fiemapExtent struct {
@@ -98,8 +98,8 @@ func getZnsInfo(regularDevice string, znsDevice string) (znsInfo, error) {
 	}
 	// fmt.Println(output)
 	return znsInfo{
-		znsStartBlkAddr: uint64(znsBlkAddr),
-		zoneBlocks:      uint64(zoneBlocks),
+		ZnsStartBlkAddr: uint64(znsBlkAddr),
+		ZoneBlocks:      uint64(zoneBlocks),
 	}, nil
 }
 
@@ -200,7 +200,7 @@ func getFileInfo(path string, regularDevice string, znsDevice string) (znsmemory
 	fileInfo := znsmemory.FileInfo{}
 	output := string(out)
 	// fmt.Println(output)
-	zoneSize := info.zoneBlocks * 4 / 1024 // MiB
+	zoneSize := info.ZoneBlocks * 4 / 1024 // MiB
 	segPerZone := zoneSize / 2             // MiB
 	outputLines := strings.Split(output, "\n")
 	fibmaps := parseFibmap(outputLines)
