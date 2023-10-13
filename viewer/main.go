@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -44,6 +45,8 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
 	}
+	b, _ := json.Marshal(zoneInfo)
+	fmt.Println(string(b))
 
 	// Open the procFile for reading to read F2FS segment bits information.
 	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.MountPath)
