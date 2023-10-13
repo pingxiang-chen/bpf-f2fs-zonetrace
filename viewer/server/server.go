@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/server/statics"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/statics"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
