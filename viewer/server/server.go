@@ -80,6 +80,16 @@ func (s *api) zoneInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// highlightHandler handles the highlight URL, redirecting to "/highlight/0".
+func (s *api) highlightHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	_, err := w.Write(statics.HighlightHtmlFile)
+	if err != nil {
+		http.Error(w, "Error writing data", http.StatusInternalServerError)
+		return
+	}
+}
+
 // getMostFrequentSegmentType finds the most frequent segment type
 func getMostFrequentSegmentType(segments []Segment) znsmemory.SegmentType {
 	countSegmentType := make(map[znsmemory.SegmentType]int)
@@ -264,6 +274,7 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 	handler.HandleFunc("/api/info/", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
 	handler.HandleFunc("/static/", a.staticsHandler)
+	handler.HandleFunc("/highlight/", a.highlightHandler)
 	handler.HandleFunc("/", a.indexHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
