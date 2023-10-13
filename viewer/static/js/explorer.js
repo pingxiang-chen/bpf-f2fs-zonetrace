@@ -27,9 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('class', 'item');
 
         // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
-        const iconType = item.type === 'folder' ? 'folder' : 'file';
         itemNode.append('i')
-            .attr('class', `${iconType} icon clickable`);
+            .attr('class', `${item.type} icon clickable`);
 
         const content = itemNode.append('div').attr('class', 'content');
         const fileInfo = content.append('div')
