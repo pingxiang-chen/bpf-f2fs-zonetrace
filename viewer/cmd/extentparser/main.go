@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -187,6 +188,9 @@ func getFileInfo(path string, regularDevice string, znsDevice string) (znsmemory
 		fmt.Printf("%s\n", err)
 		return znsmemory.FileInfo{}, err
 	}
+	b, _ := json.Marshal(info)
+	fmt.Printf("info: %s\n", string(b))
+
 	cmd := exec.Command("fibmap.f2fs", path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -258,6 +262,7 @@ func main() {
 		fmt.Printf("fileinfo%s\n", err)
 		return
 	}
-	fmt.Printf("%#v\n", fileInfo)
+	b, err := json.Marshal(fileInfo)
+	fmt.Printf("fileInfo: %s\n", string(b))
 	// fmt.Println(files)
 }
