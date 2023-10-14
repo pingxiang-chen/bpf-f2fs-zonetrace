@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func GetFileInfo(path string, znsInfo ZoneInfo) (*FileInfo, error) {
+func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 	cmd := exec.Command("Fibmap.f2fs", path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

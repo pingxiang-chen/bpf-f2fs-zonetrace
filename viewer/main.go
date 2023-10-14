@@ -48,6 +48,13 @@ func main() {
 	b, _ := json.Marshal(zoneInfo)
 	fmt.Println(string(b))
 
+	fileInfo, err := znsmemory.GetFileInfo(zoneInfo, "/mnt/f2fs/target_file.png")
+	if err != nil {
+		fmt.Printf("GetFileInfo: %s\n", err)
+	}
+	b, _ = json.Marshal(fileInfo)
+	fmt.Println(string(b))
+
 	// Open the procFile for reading to read F2FS segment bits information.
 	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.Device)
 	isProcFileExist := false
