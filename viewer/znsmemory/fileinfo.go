@@ -7,7 +7,7 @@ import (
 )
 
 func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
-	cmd := exec.Command("Fibmap.f2fs", path)
+	cmd := exec.Command("fibmap.f2fs", path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("failed to run `Fibmap.f2fs`: %w", err)
