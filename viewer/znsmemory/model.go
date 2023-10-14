@@ -57,7 +57,8 @@ type SitEntryUpdate struct {
 }
 
 type ZoneInfo struct {
-	MountPath               string
+	// Device is the device name like: nvme0n1p1
+	Device                  string
 	TotalZone               int
 	BlockPerSegment         int
 	TotalBlockPerZone       int
@@ -102,4 +103,11 @@ func (z *Zone) FrequentSegmentType() SegmentType {
 type ZonedStorage struct {
 	ZoneInfo
 	Zones []*Zone
+}
+
+type Fibmap struct {
+	FilePos  int
+	StartBlk int
+	EndBlk   int
+	Blks     int
 }

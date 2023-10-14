@@ -94,7 +94,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	}
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 	return &znsmemory.ZoneInfo{
-		MountPath:               mountPath,
+		Device:                  mountPath,
 		TotalZone:               totalZone,
 		BlockPerSegment:         SegmentSize,
 		TotalBlockPerZone:       zoneBlocks,
