@@ -13,13 +13,17 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 		return nil, fmt.Errorf("failed to run `fibmap.f2fs`: %w", err)
 	}
 	fileInfo := FileInfo{
-		FilePath: path,
+		FilePath:     path,
+		FileSegments: []FileSegment{},
+		Fibmaps:      []Fibmap{},
 	}
 	output := string(out)
 	zoneSize := znsInfo.TotalBlockPerZone * 4 / 1024 // MiB
 	segPerZone := zoneSize / 2                       // MiB
 	outputLines := strings.Split(output, "\n")
 	fibmaps, err := parseFibmap(outputLines)
+	fileInfo.Fibmaps = make([]Fibmap, len(fibmaps))
+	copy(fileInfo.Fibmaps, fibmaps)
 	if err != nil {
 		return nil, fmt.Errorf("ParseFibmap: %w", err)
 	}
@@ -29,7 +33,7 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 		// endSegNo := Fibmap.end_blk / 512
 		sentryStartOffset := fbm.StartBlk % 512
 		sentryEndOffset := sentryStartOffset + fbm.Blks
-		for offset := sentryStartOffset; offset < sentryEndOffset; offset++ {
+		for offset := sentryStartOffset; offset <= sentryEndOffset; offset++ {
 			// get sit and update data
 			byteOffset := offset / 8
 			curSegNo := segNo + (byteOffset / 64)
@@ -49,10 +53,10 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 	for segNo, sit := range sitMap {
 		curZone := segNo / segPerZone
 		fileInfo.FileSegments = append(fileInfo.FileSegments, FileSegment{
-			ZoneIndex:    curZone,
-			SegmentIndex: segNo,
+			ZoneIndex:            curZone,
+			SegmentIndex:         segNo,
 			RelativeSegmentIndex: segNo % segPerZone,
-			ValidMap:     sit,
+			ValidMap:             sit,
 		})
 	}
 	return &fileInfo, nil

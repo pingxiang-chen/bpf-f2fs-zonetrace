@@ -70,6 +70,7 @@ type ZoneInfo struct {
 type FileInfo struct {
 	FilePath     string
 	FileSegments []FileSegment
+	Fibmaps		[]Fibmap
 }
 
 type FileSegment struct {
