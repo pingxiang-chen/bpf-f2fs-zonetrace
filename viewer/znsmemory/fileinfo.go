@@ -33,15 +33,12 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 		// endSegNo := Fibmap.end_blk / 512
 		sentryStartOffset := fbm.StartBlk % 512
 		sentryEndOffset := sentryStartOffset + fbm.Blks
-		for offset := sentryStartOffset; offset <= sentryEndOffset; offset++ {
+		for offset := sentryStartOffset; offset < sentryEndOffset; offset++ {
 			// get sit and update data
 			byteOffset := offset / 8
 			curSegNo := segNo + (byteOffset / 64)
 			byteOffset %= 64
 			bitOffset := offset % 8
-			if byteOffset >= 64 {
-
-			}
 			sit, ok := sitMap[curSegNo]
 			if !ok {
 				sitMap[curSegNo] = make([]byte, 64)
