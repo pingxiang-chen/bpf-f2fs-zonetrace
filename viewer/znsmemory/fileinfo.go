@@ -62,7 +62,7 @@ func parseFibmap(output_lines []string) ([]Fibmap, error) {
 		filePos, startBlk, endBlk, blks := 0, 0, 0, 0
 		_, err := fmt.Sscanf(line, "%d %d %d %d", &filePos, &startBlk, &endBlk, &blks)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse Fibmap: %w (%s)", err, line)
+			continue
 		}
 		if blks != 0 {
 			fibmaps = append(fibmaps, Fibmap{
