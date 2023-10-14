@@ -54,6 +54,9 @@ func main() {
 	}
 	b, _ = json.Marshal(fileInfo)
 	fmt.Println(string(b))
+	for i, segment := range fileInfo.FileSegments {
+		fmt.Printf("Segment %d: ZoneIndex: %d, SegmentIndex: %d, ValidMap: %v\n", i, segment.ZoneIndex, segment.SegmentIndex, segment.ValidMap)
+	}
 
 	// Open the procFile for reading to read F2FS segment bits information.
 	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.Device)

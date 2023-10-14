@@ -12,9 +12,10 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to run `fibmap.f2fs`: %w", err)
 	}
-	fileInfo := FileInfo{}
+	fileInfo := FileInfo{
+		FilePath: path,
+	}
 	output := string(out)
-	fmt.Printf("====== fibmap.f2fs ======\n%s\n=====================", output)
 	zoneSize := znsInfo.TotalBlockPerZone * 4 / 1024 // MiB
 	segPerZone := zoneSize / 2                       // MiB
 	outputLines := strings.Split(output, "\n")

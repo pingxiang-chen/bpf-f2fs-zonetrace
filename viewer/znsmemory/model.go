@@ -68,6 +68,7 @@ type ZoneInfo struct {
 }
 
 type FileInfo struct {
+	FilePath     string
 	FileSegments []FileSegment
 }
 
