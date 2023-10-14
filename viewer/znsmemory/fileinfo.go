@@ -51,6 +51,7 @@ func GetFileInfo(znsInfo *ZoneInfo, path string) (*FileInfo, error) {
 		fileInfo.FileSegments = append(fileInfo.FileSegments, FileSegment{
 			ZoneIndex:    curZone,
 			SegmentIndex: segNo,
+			RelativeSegmentIndex: segNo % segPerZone
 			ValidMap:     sit,
 		})
 	}

@@ -75,6 +75,7 @@ type FileInfo struct {
 type FileSegment struct {
 	ZoneIndex    int
 	SegmentIndex int
+	RelativeSegmentIndex int
 	ValidMap     ValidMap // 해당하는것을 1로 바꾼 512bit
 }
 
