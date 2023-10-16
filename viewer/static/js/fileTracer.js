@@ -162,11 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr("height", canvasColSize * cellSize)
                 .node();
             context = canvas.getContext("2d");
-            cellColorMap.forEach((color, i) => {
-                const [xPos, yPos] = getDrawPos(Math.floor(i / bitmapSize), i % bitmapSize, zoomLevel)
-                context.fillStyle = color;
-                context.fillRect(xPos, yPos, cellSize, cellSize);
-            })
+            drawZone();
         }
 
         const onChangeCellSize = () => {
