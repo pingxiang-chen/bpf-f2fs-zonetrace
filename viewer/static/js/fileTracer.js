@@ -368,10 +368,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data !== null) {
                 const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
 
-                const tooltip = d3.select("body").append("div")
-                    .attr("class", "tooltip")
-                    .style("opacity", 0);
-
                 histogram.selectAll("rect")
                     .data(dataArray)
                     .enter()
@@ -381,22 +377,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.value))
                     .style("fill", "#69b3a2")
-                    .on("mouseover", function (event, d) {
-                        tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                        tooltip.html(d.value)
-                            .style("left", (event.pageX + 5) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function (d) {
-                        tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                    });
+                    .attr("data-tooltip", d => d.value)
+                    .attr("data-position", "top center");
             }
         }
-
 
         /* ---------- End of drawing histogram ---------- */
 
