@@ -24,6 +24,7 @@ func getMountPoints(device string) ([]string, error) {
 }
 
 func GetMountInfo(device string) (*MountInfo, error) {
+	fmt.Printf("GetMountInfo: %s\n", device)
 	mountPaths, err := getMountPoints(device)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get mount points: %w", err)
