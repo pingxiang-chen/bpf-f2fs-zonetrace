@@ -377,8 +377,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.value))
                     .style("fill", "#69b3a2")
-                    .attr("data-tooltip", d => d.value)
-                    .attr("data-position", "top center");
+                    // .attr("data-tooltip", d => d.value)
+                    // .attr("data-position", "top center");
             }
         }
 
