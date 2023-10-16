@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
             case 0: // UnknownPath
                 return 'question circle';
             case 1: // RootPath
-                return 'home';
+                return 'disk';
             case 2: // ParentPath
                 return 'arrow left';
             case 3: // FilePath
@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 }
                 if (!item.children) {
-                    currentPath = item.path;
                     updateCurrentFileList(currentPath);
                 }
             });
@@ -96,11 +95,18 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
-    async function updateCurrentFileList(dirPath) {
-        const response = await fetch(`/api/files?dirPath=${dirPath}`);
+    async function updateCurrentFileList(newDirPath) {
+        const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
+        // find previous directory
+        const prevDir = data.find((item) => item.file_path === currentPath);
         fileSystem.length = 0; // clear fileSystem
-        console.log(data)
+        fileSystem.push({
+            iconType: 'arrow left',
+            name: prevDir['name'],
+            size: prevDir['size_str'],
+            path: prevDir['file_path'],
+        });
         for (const fileInfo of data['files']) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
@@ -109,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 path: fileInfo['file_path'],
             });
         }
+        currentPath = newDirPath;
         // 파일 시스템 채우기
         populateFileSystem(fileSystem);
     }
