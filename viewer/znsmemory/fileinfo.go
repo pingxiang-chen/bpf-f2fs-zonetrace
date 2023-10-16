@@ -70,8 +70,8 @@ func parseFibmap(output_lines []string) ([]Fibmap, error) {
 		if blks != 0 {
 			fibmaps = append(fibmaps, Fibmap{
 				FilePos:  filePos,
-				StartBlk: startBlk,
-				EndBlk:   endBlk,
+				StartBlk: startBlk - 1572864,
+				EndBlk:   endBlk - 1572864,
 				Blks:     blks,
 			})
 		}
