@@ -19,25 +19,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 예시 파일 시스템 데이터
-    const fileSystem = [
-        {iconType: 'arrow left', name: '..'},
-        {
-            iconType: 'folder',
-            name: 'Documents',
-            children: [
-                {iconType: 'file', name: 'report.pdf', size: '200KB'},
-                {iconType: 'file', name: 'essay.docx', size: '1MB'}
-            ]
-        },
-        {
-            iconType: 'folder',
-            name: 'Music',
-            children: [
-                {iconType: 'file', name: 'song.mp3', size: '5MB'}
-            ]
-        },
-        {iconType: 'file', name: 'todo.txt', size: '50KB'}
-    ];
+    // const fileSystem = [
+    //     {iconType: 'arrow left', name: '..'},
+    //     {
+    //         iconType: 'folder',
+    //         name: 'Documents',
+    //         children: [
+    //             {iconType: 'file', name: 'report.pdf', size: '200KB'},
+    //             {iconType: 'file', name: 'essay.docx', size: '1MB'}
+    //         ]
+    //     },
+    //     {
+    //         iconType: 'folder',
+    //         name: 'Music',
+    //         children: [
+    //             {iconType: 'file', name: 'song.mp3', size: '5MB'}
+    //         ]
+    //     },
+    //     {iconType: 'file', name: 'todo.txt', size: '50KB'}
+    // ];
 
 // 파일 및 폴더 항목을 생성하는 함수
     function createFileSystemItem(item) {
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const list = d3.select(this.parentNode).select('.list');
                 list.style('display', list.style('display') === 'none' ? 'block' : 'none');
             } else if (item.type === TYPE_HOME) {
-                console.log('home');
                 updateCurrentFileList(null);
             } else if (item.type !== TYPE_FILE) {
                 if (!item.children) {
@@ -137,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: '..',
                 size: parent['size'],
                 path: parent['path'],
+                parent: parent.parent || null,
             });
         }
 
@@ -159,5 +159,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     updateCurrentFileList(null);
-
 });
