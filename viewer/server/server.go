@@ -284,7 +284,7 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			response.Files = append(response.Files, fstool.FileInfo{
 				FilePath: mountPath,
 				Name:     mountPath,
-				Type:     fstool.MountPath,
+				Type:     fstool.RootPath,
 				SizeStr:  "",
 			})
 		}

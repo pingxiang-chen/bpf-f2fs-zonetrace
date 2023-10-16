@@ -4,7 +4,7 @@ type PathType int
 
 const (
 	UnknownPath PathType = iota
-	MountPath
+	RootPath
 	ParentPath
 	FilePath
 	DirectoryPath

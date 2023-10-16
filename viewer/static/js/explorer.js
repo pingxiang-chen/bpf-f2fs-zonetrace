@@ -1,25 +1,41 @@
 document.addEventListener('DOMContentLoaded', function () {
     let currentPath = "";
 
+    function getIconType(pathType) {
+        switch (pathType) {
+            case 0: // UnknownPath
+                return 'question circle';
+            case 1: // RootPath
+                return 'home';
+            case 2: // ParentPath
+                return 'arrow left';
+            case 3: // FilePath
+                return 'file';
+            case 4: // DirectoryPath
+                return 'folder';
+        }
+        return 'question circle'; // UnknownPath
+    }
+
     // 예시 파일 시스템 데이터
     const fileSystem = [
-        {type: 'arrow left', name: '..'},
+        {iconType: 'arrow left', name: '..'},
         {
-            type: 'folder',
+            iconType: 'folder',
             name: 'Documents',
             children: [
-                {type: 'file', name: 'report.pdf', size: '200KB'},
-                {type: 'file', name: 'essay.docx', size: '1MB'}
+                {iconType: 'file', name: 'report.pdf', size: '200KB'},
+                {iconType: 'file', name: 'essay.docx', size: '1MB'}
             ]
         },
         {
-            type: 'folder',
+            iconType: 'folder',
             name: 'Music',
             children: [
-                {type: 'file', name: 'song.mp3', size: '5MB'}
+                {iconType: 'file', name: 'song.mp3', size: '5MB'}
             ]
         },
-        {type: 'file', name: 'todo.txt', size: '50KB'}
+        {iconType: 'file', name: 'todo.txt', size: '50KB'}
     ];
 
     // 파일 및 폴더 항목을 생성하는 함수
@@ -31,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
         itemNode.append('i')
-            .attr('class', `${item.type} icon clickable`);
+            .attr('class', `${item.iconType} icon clickable`);
 
         const content = itemNode.append('div').attr('class', 'content');
         const fileInfo = content.append('div')
@@ -68,20 +84,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 파일 시스템을 UI 리스트에 추가하는 함수
-    function populateFileSystem() {
+    function populateFileSystem(fileSystemData) {
         d3.select('#file-system').selectAll('.item')
-            .data(fileSystem)
+            .data(fileSystemData)
             .enter()
             .append(createFileSystemItem);
     }
 
     async function updateCurrentFileList(dirPath) {
         const response = await fetch(`/api/files?dirPath=${dirPath}`);
-        console.log(response);
+        // clear fileSystem
+        fileSystem.length = 0;
+        for (const fileInfo of response['files']) {
+            fileSystem.push({
+                iconType: getIconType(fileInfo['type']),
+                name: fileInfo['name'],
+                size: fileInfo['size_str'],
+            });
+        }
     }
 
     updateCurrentFileList(currentPath);
 
     // 페이지 로드 시 파일 시스템 채우기
-    populateFileSystem();
+    populateFileSystem(fileSystem);
 });
