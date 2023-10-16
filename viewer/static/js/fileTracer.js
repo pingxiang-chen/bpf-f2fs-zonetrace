@@ -335,42 +335,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         /* ---------- Draw the histogram ---------- */
+        drawHistorgram = () => {
+            const data = {'34k': 23, '64k': 54};
+            // set the dimensions and margins of the graph
+            const margin = {top: 10, right: 30, bottom: 30, left: 40},
+                width = 460 - margin.left - margin.right,
+                height = 400 - margin.top - margin.bottom;
 
-        const data = {'34k': 23, '64k': 54};
+            // append the svg object to the body of the page
+            const histogram = d3.select("#histogram")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                    `translate(${margin.left},${margin.top})`);
 
-        const histogram = d3.select("#histogram")
-            .append("svg")
-            .attr("width", 460)
-            .attr("height", 400);
+            // given data
+            const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
 
-        const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
+            // X axis: scale and draw:
+            const x = d3.scaleBand()
+                .domain(dataArray.map(d => d.key))
+                .range([0, width])
+                .padding(0.1);
+            histogram.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x));
 
-        const x = d3.scaleBand()
-            .domain(dataArray.map(d => d.key))
-            .range([40, 420])  // Adjusted range to account for missing margins
-            .padding(0.1);
-        histogram.append("g")
-            .attr("transform", `translate(0, 370)`)  // Adjusted transform to account for missing margins
-            .call(d3.axisBottom(x));
+            // Y axis: scale and draw:
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(dataArray, d => d.value)])
+                .nice()  // extends the domain to nice round numbers
+                .range([height, 0]);
+            histogram.append("g")
+                .call(d3.axisLeft(y));
 
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(dataArray, d => d.value)])
-            .nice()
-            .range([370, 10]);  // Adjusted range to account for missing margins
-        histogram.append("g")
-            .attr("transform", `translate(40, 0)`)  // Adjusted transform to account for missing margins
-            .call(d3.axisLeft(y));
-
-        histogram.selectAll("rect")
-            .data(dataArray)
-            .enter()
-            .append("rect")
-            .attr("x", d => x(d.key))
-            .attr("y", d => y(d.value))
-            .attr("width", x.bandwidth())
-            .attr("height", d => 370 - y(d.value))  // Adjusted height to account for missing margins
-            .style("fill", "#69b3a2");
-
+            // append the bar rectangles to the svg element
+            histogram.selectAll("rect")
+                .data(dataArray)
+                .enter()
+                .append("rect")
+                .attr("x", d => x(d.key))
+                .attr("y", d => y(d.value))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.value))
+                .style("fill", "#69b3a2");
+        }
+        drawHistorgram()
 
         /* ---------- End of drawing histogram ---------- */
 
