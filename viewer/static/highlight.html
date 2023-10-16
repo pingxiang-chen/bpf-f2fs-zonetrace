@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Zones</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .column {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .left-align {
+            text-align: end;
+        }
+
+        .index-item {
+            display: flex;
+            margin-bottom: 10px;
+            justify-content: end;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .cell-size-input {
+            width: 4ch;
+            padding: 0 5px;
+        }
+
+        .block-size-input {
+            width: 8ch;
+            padding: 0 5px;
+        }
+
+        /* 파일 탐색기 스타일을 정의합니다. */
+        .file-info {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .file-size {
+            margin-left: 10px;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.css">
+    <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
+
+</head>
+<body style="background-color: #f3f3f3">
+
+
+<div class="container">
+
+    <!-- left side. map of blocks -->
+    <div class="column">
+        <div>Blocks of Zone <b id="curZoneNum"></b> (<span id="curSegType"></span>)</div>
+        <div>
+            <label for="cellSizeInput">CellSize</label>
+            <input type="number" id="cellSizeInput" class="cell-size-input" value="1" step="1" min="1">
+
+            <label for="blocksPerLineInput">BlocksPerLine</label>
+            <input type="number" id="blocksPerLineInput" class="block-size-input" value="0" step="1" min="1">
+        </div>
+        <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <!-- 파일 및 폴더 목록을 표시할 UI 컨테이너입니다. -->
+    <div class="column">
+        <h3 class="ui header">Files</h3>
+        <div class="ui list" id="file-system"></div>
+    </div>
+
+    <!-- histogram -->
+    <div class="column">
+        <div id="histogram"></div>
+    </div>
+
+    <!-- right side. zone list -->
+    <div class="column">
+        <div id="zones" class="left-align"></div>
+    </div>
+</div>
+
+<script src="/static/js/fileTracer.js"></script>
+</body>
+

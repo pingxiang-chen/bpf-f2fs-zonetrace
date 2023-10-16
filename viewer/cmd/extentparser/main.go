@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,35 +16,35 @@ import (
 )
 
 const (
-	FIEMAP_EXTENT_SIZE = 56
-	FIEMAP_SIZE        = 32
-	FS_IOC_FIEMAP      = 3223348747
-	FIEMAP_MAX_OFFSET  = ^uint64(0)
-	FIEMAP_FLAG_SYNC   = 0x0001
-	FIEMAP_EXTENT_LAST = 0x0001
+	FiemapExtentSize = 56
+	FiemapSize       = 32
+	FsIocFiemap      = 3223348747
+	FiemapMaxOffset  = ^uint64(0)
+	FiemapFlagSync   = 0x0001
+	FiemapExtentLast = 0x0001
 )
 
-type zns_info struct {
-	zns_start_blkaddr uint64
-	zone_blocks       uint64
+type znsInfo struct {
+	ZnsStartBlkAddr uint64
+	ZoneBlocks      uint64
 }
 
-type fiemap_extent struct {
-	fe_logical    uint64
-	fe_physical   uint64
-	fe_length     uint64
-	fe_reserved64 [2]uint64
-	fe_flags      uint32
-	fe_reserved   [3]uint32
+type fiemapExtent struct {
+	feLogical    uint64
+	fePhysical   uint64
+	feLength     uint64
+	feReserved64 [2]uint64
+	feFlags      uint32
+	feReserved   [3]uint32
 } // 56 bytes
 
 type fiemap struct {
-	fm_start          uint64
-	fm_length         uint64
-	fm_flags          uint32
-	fm_mapped_extents uint32
-	fm_extent_count   uint32
-	fm_reserved       uint32
+	fmStart         uint64
+	fmLength        uint64
+	fmFlags         uint32
+	fmMappedExtents uint32
+	fmExtentCount   uint32
+	fmReserved      uint32
 } // 32 bytes
 
 type extent struct {
@@ -53,13 +54,13 @@ type extent struct {
 	flags    uint32
 }
 
-func dir_list(dir string) ([]string, error) {
+func dirList(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return nil, err
 	}
-	ret := []string{}
+	var ret []string
 	for _, entry := range entries {
 		if entry.Type().IsRegular() {
 			ret = append(ret, entry.Name())
@@ -68,41 +69,41 @@ func dir_list(dir string) ([]string, error) {
 	return ret, nil
 }
 
-func get_zns_info(regular_device string, zns_device string) (zns_info, error) {
-	out, err := exec.Command("dump.f2fs", fmt.Sprintf("/dev/%s", regular_device)).Output()
+func getZnsInfo(regularDevice string, znsDevice string) (znsInfo, error) {
+	out, err := exec.Command("dump.f2fs", fmt.Sprintf("/dev/%s", regularDevice)).Output()
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
-		return zns_info{}, err
+		return znsInfo{}, err
 	}
 	output := string(out)
-	zns_blkaddr_pattern := regexp.MustCompile(fmt.Sprintf(`/dev/%s blkaddr = (\w+)`, zns_device))
-	match := zns_blkaddr_pattern.FindStringSubmatch(output)
+	znsBlkAddrPattern := regexp.MustCompile(fmt.Sprintf(`/dev/%s blkaddr = (\w+)`, znsDevice))
+	match := znsBlkAddrPattern.FindStringSubmatch(output)
 	if len(match) < 2 {
-		return zns_info{}, errors.New("Cannot find zns blk addr")
+		return znsInfo{}, errors.New("Cannot find zns blk addr")
 	}
-	zns_blkaddr, err := strconv.ParseInt(match[1], 16, 64)
+	znsBlkAddr, err := strconv.ParseInt(match[1], 16, 64)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
-		return zns_info{}, err
+		return znsInfo{}, err
 	}
-	zone_blocks_pattern := regexp.MustCompile(`(\d+) blocks per zone`)
-	match = zone_blocks_pattern.FindStringSubmatch(output)
+	zoneBlocksPattern := regexp.MustCompile(`(\d+) blocks per zone`)
+	match = zoneBlocksPattern.FindStringSubmatch(output)
 	if len(match) < 2 {
-		return zns_info{}, errors.New("Cannot find zone blocks")
+		return znsInfo{}, errors.New("Cannot find zone blocks")
 	}
-	zone_blocks, err := strconv.Atoi(match[1])
+	zoneBlocks, err := strconv.Atoi(match[1])
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
-		return zns_info{}, err
+		return znsInfo{}, err
 	}
 	// fmt.Println(output)
-	return zns_info{
-		zns_start_blkaddr: uint64(zns_blkaddr),
-		zone_blocks:       uint64(zone_blocks),
+	return znsInfo{
+		ZnsStartBlkAddr: uint64(znsBlkAddr),
+		ZoneBlocks:      uint64(zoneBlocks),
 	}, nil
 }
 
-func get_extents(path string) ([]extent, error) {
+func getExtents(path string) ([]extent, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Printf("Error: open: %s\n", err)
@@ -113,63 +114,63 @@ func get_extents(path string) ([]extent, error) {
 		return nil, err
 	}
 	// check fm_mappd_extents count
-	fiemap_result := fiemap{fm_start: 0, fm_length: FIEMAP_MAX_OFFSET, fm_flags: FIEMAP_FLAG_SYNC, fm_mapped_extents: 0, fm_extent_count: 0, fm_reserved: 0}
-	ptr := uintptr(unsafe.Pointer(&fiemap_result))
-	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FS_IOC_FIEMAP, ptr)
+	fiemapResult := fiemap{fmStart: 0, fmLength: FiemapMaxOffset, fmFlags: FiemapFlagSync, fmMappedExtents: 0, fmExtentCount: 0, fmReserved: 0}
+	ptr := uintptr(unsafe.Pointer(&fiemapResult))
+	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FsIocFiemap, ptr)
 	if errors.Is(err, os.ErrInvalid) {
 		fmt.Printf("Error: ioctl: %s\n", err)
 		return nil, err
 	}
 	// allocate for actual extents count
-	fiemap_extents := make([]fiemap_extent, fiemap_result.fm_mapped_extents+1)
+	fiemapExtents := make([]fiemapExtent, fiemapResult.fmMappedExtents+1)
 	// index 0 element as fiemap
-	fiemap_ptr := unsafe.Pointer(uintptr(unsafe.Pointer(&fiemap_extents[1])) - FIEMAP_SIZE)
-	fiemap_struct := (*fiemap)(fiemap_ptr)
-	fiemap_struct.fm_start = 0
-	fiemap_struct.fm_length = FIEMAP_MAX_OFFSET
-	fiemap_struct.fm_flags = FIEMAP_FLAG_SYNC
-	fiemap_struct.fm_extent_count = fiemap_result.fm_mapped_extents
-	fiemap_struct.fm_mapped_extents = 0
+	fiemapPtr := unsafe.Pointer(uintptr(unsafe.Pointer(&fiemapExtents[1])) - FiemapSize)
+	fiemapStruct := (*fiemap)(fiemapPtr)
+	fiemapStruct.fmStart = 0
+	fiemapStruct.fmLength = FiemapMaxOffset
+	fiemapStruct.fmFlags = FiemapFlagSync
+	fiemapStruct.fmExtentCount = fiemapResult.fmMappedExtents
+	fiemapStruct.fmMappedExtents = 0
 	// get extents
-	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FS_IOC_FIEMAP, uintptr(fiemap_ptr))
+	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, file.Fd(), FsIocFiemap, uintptr(fiemapPtr))
 	if errors.Is(err, os.ErrInvalid) {
 		fmt.Printf("Error: ioctl: %s\n", err)
 		return nil, err
 	}
 	// convert
-	extents := make([]extent, fiemap_struct.fm_extent_count)
-	for i := 1; i <= int(fiemap_struct.fm_extent_count); i++ {
+	extents := make([]extent, fiemapStruct.fmExtentCount)
+	for i := 1; i <= int(fiemapStruct.fmExtentCount); i++ {
 		extents[i-1] = extent{
-			logical:  fiemap_extents[i].fe_logical,
-			physical: fiemap_extents[i].fe_physical,
-			length:   fiemap_extents[i].fe_length,
-			flags:    fiemap_extents[i].fe_flags,
+			logical:  fiemapExtents[i].feLogical,
+			physical: fiemapExtents[i].fePhysical,
+			length:   fiemapExtents[i].feLength,
+			flags:    fiemapExtents[i].feFlags,
 		}
 	}
-	if extents[len(extents)-1].flags&FIEMAP_EXTENT_LAST == 0 {
+	if extents[len(extents)-1].flags&FiemapExtentLast == 0 {
 		fmt.Printf("WARN: incomplete extents list.")
 	}
 	return extents, nil
 }
 
 type fibmap struct {
-	file_pos  int
-	start_blk int
-	end_blk   int
-	blks      int
+	filePos  int
+	startBlk int
+	endBlk   int
+	blks     int
 }
 
 func parseFibmap(output_lines []string) []fibmap {
 	var fibmaps []fibmap
 	for i := 0; i < len(output_lines); i++ {
-		file_pos, start_blk, end_blk, blks := 0, 0, 0, 0
-		fmt.Sscanf(output_lines[i], "%d %d %d %d", &file_pos, &start_blk, &end_blk, &blks)
+		filePos, startBlk, endBlk, blks := 0, 0, 0, 0
+		fmt.Sscanf(output_lines[i], "%d %d %d %d", &filePos, &startBlk, &endBlk, &blks)
 		if blks != 0 {
 			fibmaps = append(fibmaps, fibmap{
-				file_pos:  file_pos,
-				start_blk: start_blk,
-				end_blk:   end_blk,
-				blks:      blks,
+				filePos:  filePos,
+				startBlk: startBlk,
+				endBlk:   endBlk,
+				blks:     blks,
 			})
 		}
 	}
@@ -181,12 +182,15 @@ func parseFibmap(output_lines []string) []fibmap {
  * regular_device: f2fs regular device. ex) nvme0n1p1
  * zns_device: f2fs zns device. ex) nvme1n1
  */
-func getFileInfo(path string, regular_device string, zns_device string) (znsmemory.FileInfo, error) {
-	info, err := get_zns_info(regular_device, zns_device)
+func getFileInfo(path string, regularDevice string, znsDevice string) (znsmemory.FileInfo, error) {
+	info, err := getZnsInfo(regularDevice, znsDevice)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return znsmemory.FileInfo{}, err
 	}
+	b, _ := json.Marshal(info)
+	fmt.Printf("info: %s\n", string(b))
+
 	cmd := exec.Command("fibmap.f2fs", path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -196,15 +200,15 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 	fileInfo := znsmemory.FileInfo{}
 	output := string(out)
 	// fmt.Println(output)
-	zoneSize := info.zone_blocks * 4 / 1024 // MiB
-	segPerZone := zoneSize / 2              // MiB
-	output_lines := strings.Split(output, "\n")
-	fibmaps := parseFibmap(output_lines)
+	zoneSize := info.ZoneBlocks * 4 / 1024 // MiB
+	segPerZone := zoneSize / 2             // MiB
+	outputLines := strings.Split(output, "\n")
+	fibmaps := parseFibmap(outputLines)
 	sitMap := make(map[int][]byte)
 	for _, fibmap := range fibmaps {
-		segNo := fibmap.start_blk / 512 // 512block per segment (4K * 512 = 2M segment)
+		segNo := fibmap.startBlk / 512 // 512block per segment (4K * 512 = 2M segment)
 		// endSegNo := fibmap.end_blk / 512
-		sentryStartOffset := fibmap.start_blk % 512
+		sentryStartOffset := fibmap.startBlk % 512
 		sentryEndOffset := sentryStartOffset + fibmap.blks
 		for offset := sentryStartOffset; offset < sentryEndOffset; offset++ {
 			// get sit and update data
@@ -235,20 +239,20 @@ func getFileInfo(path string, regular_device string, zns_device string) (znsmemo
 }
 
 func main() {
-	// info, err := get_zns_info("nvme4n1p1", "nvme3n1")
+	// info, err := getZnsInfo("nvme4n1p1", "nvme3n1")
 	// if err != nil {
 	// 	fmt.Printf("zns info:%s\n", err)
 	// 	return
 	// }
 	// fmt.Printf("%#v\n", info)
-	// extents, err := get_extents("/mnt/f2fs/normal.0.0")
+	// extents, err := getExtents("/mnt/f2fs/normal.0.0")
 	// if err != nil {
 	// 	fmt.Printf("extents:%s\n", err)
 	// 	return
 	// }
 	// fmt.Printf("%#v\n", extents[len(extents)-1])
 	// // fmt.Printf("%#v\n", extents)
-	// files, err := dir_list("/mnt/f2fs/")
+	// files, err := dirList("/mnt/f2fs/")
 	// if err != nil {
 	// 	fmt.Printf("%s\n", err)
 	// 	return
@@ -258,6 +262,7 @@ func main() {
 		fmt.Printf("fileinfo%s\n", err)
 		return
 	}
-	fmt.Printf("%#v\n", fileInfo)
+	b, err := json.Marshal(fileInfo)
+	fmt.Printf("fileInfo: %s\n", string(b))
 	// fmt.Println(files)
 }

@@ -17,7 +17,14 @@ message SegmentResponse {
 message ZoneResponse {
   int64 time = 1;
   int32 zone_no = 2;
-  // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
+  // last_segment_type: -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode
   int32 last_segment_type = 3;
   repeated Segment segments = 4;
+}
+
+
+message FileInfoResponse {
+  string file_path = 1;
+  map<int32, bytes> zone_bitmaps = 2;
+  map<int32, int32> block_histogram = 3;
 }

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Zones</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .left-align {
+            text-align: end;
+        }
+
+        .index-item {
+            display: flex;
+            margin-bottom: 10px;
+            justify-content: end;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .cell-size-input {
+            width: 4ch;
+            padding: 0 5px;
+        }
+
+        .block-size-input {
+            width: 8ch;
+            padding: 0 5px;
+        }
+
+    </style>
+    <script src="https://d3js.org/d3.v7.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/protobufjs@7.2.4/dist/protobuf.js"></script>
+
+</head>
+<body style="background-color: #f3f3f3">
+
+
+<div class="container">
+
+    <!-- left side. map of blocks -->
+    <div class="column">
+        <div>Blocks of Zone <b id="curZoneNum"></b> (<span id="curSegType"></span>)</div>
+        <div>
+            <label for="cellSizeInput">CellSize</label>
+            <input type="number" id="cellSizeInput" class="cell-size-input" value="1" step="1" min="1"
+                   onchange="onChangeCellSize()">
+
+            <label for="blocksPerLineInput">BlocksPerLine</label>
+            <input type="number" id="blocksPerLineInput" class="block-size-input" value="0" step="1" min="1"
+                   onchange="onChangeBlockSize()">
+        </div>
+        <canvas id="chartCanvas"></canvas>
+    </div>
+
+    <!-- color index -->
+    <div class="column" style="text-align: end">
+        <div id="color-indexes">
+            <h4>Color Index</h4>
+            <div class="index-item">
+                <div class="color-box" style="background-color: rgb(128,128,128);"></div> <!-- gray -->
+                <div>Unknown</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: red;"></div>
+                <div>Hot Data</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: yellow;"></div>
+                <div>Warm Data</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: blue;"></div>
+                <div>Cold Data</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: pink;"></div>
+                <div>Hot Node</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: orange;"></div>
+                <div>Warm Node</div>
+            </div>
+            <div class="index-item">
+                <div class="color-box" style="background-color: skyblue;"></div>
+                <div>Cold Node</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- right side. zone list -->
+    <div class="column">
+        <div id="zones" class="left-align"></div>
+    </div>
+</div>
+<script src="/static/js/tracer.js"></script>
+</body>
+

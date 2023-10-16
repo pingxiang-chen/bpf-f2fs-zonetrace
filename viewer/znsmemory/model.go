@@ -57,7 +57,9 @@ type SitEntryUpdate struct {
 }
 
 type ZoneInfo struct {
-	MountPath               string
+	// RegularDeviceName is the device name like: nvme0n1p1
+	RegularDeviceName       string
+	ZNSDeviceName           string
 	TotalZone               int
 	BlockPerSegment         int
 	TotalBlockPerZone       int
@@ -67,13 +69,22 @@ type ZoneInfo struct {
 }
 
 type FileInfo struct {
+	FilePath     string
 	FileSegments []FileSegment
+	Fibmaps      []Fibmap
+}
+
+type FileResponse struct {
+	FilePath       string
+	ZoneBitmaps    map[int][]byte
+	BlockHistogram map[int]int
 }
 
 type FileSegment struct {
-	ZoneIndex    int
-	SegmentIndex int
-	ValidMap     ValidMap // 해당하는것을 1로 바꾼 512bit
+	ZoneIndex            int
+	SegmentIndex         int
+	RelativeSegmentIndex int
+	ValidMap             ValidMap // 해당하는것을 1로 바꾼 512bit
 }
 
 type Zone struct {
@@ -102,4 +113,11 @@ func (z *Zone) FrequentSegmentType() SegmentType {
 type ZonedStorage struct {
 	ZoneInfo
 	Zones []*Zone
+}
+
+type Fibmap struct {
+	FilePos  int64
+	StartBlk int64
+	EndBlk   int64
+	Blks     int
 }

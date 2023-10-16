@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Open the procFile for reading to read F2FS segment bits information.
-	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.MountPath)
+	procPath := fmt.Sprintf("/proc/fs/f2fs/%s/segment_bits", zoneInfo.RegularDeviceName)
 	isProcFileExist := false
 	if _, err := os.Stat(procPath); err == nil {
 		isProcFileExist = true

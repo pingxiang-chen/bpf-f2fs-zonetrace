@@ -6,8 +6,11 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protodelim"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/rle"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
 
@@ -67,4 +70,43 @@ func (z *ZoneResponse) Serialize() []byte {
 type zoneNoSegmentTypePair struct {
 	ZoneNo      int
 	SegmentType znsmemory.SegmentType
+}
+
+type ListFilesResponse struct {
+	Files []fstool.FileInfo `json:"files"`
+}
+
+func (r *ListFilesResponse) Serialize() []byte {
+	b, err := json.Marshal(r)
+	if err != nil {
+		fmt.Printf("error serializing list files response: %v\n", err)
+	}
+	return b
+}
+
+type FileInfoResponse struct {
+	FilePath       string         `json:"file_path"`
+	ZoneBitmaps    map[int][]byte `json:"zone_bitmaps"`
+	BlockHistogram map[int]int    `json:"block_histogram"`
+}
+
+func (r *FileInfoResponse) Serialize() []byte {
+	zoneBitmaps := make(map[int32][]byte)
+	for k, v := range r.ZoneBitmaps {
+		zoneBitmaps[int32(k)] = rle.Compress(v)
+	}
+	blockHistogram := make(map[int32]int32)
+	for k, v := range r.BlockHistogram {
+		blockHistogram[int32(k)] = int32(v)
+	}
+	msg := protos.FileInfoResponse{
+		FilePath:       r.FilePath,
+		ZoneBitmaps:    zoneBitmaps,
+		BlockHistogram: blockHistogram,
+	}
+	b, err := proto.Marshal(&msg)
+	if err != nil {
+		fmt.Printf("error serializing file info response: %v\n", err)
+	}
+	return b
 }
