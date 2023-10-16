@@ -179,9 +179,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // cellColorMap is an array that stores all the blocks within the current zone as a one-dimensional array.
         const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "white");
 
-        function getColorMapIndex(segmentNumber, bitmapIndex) {
-            return segmentNumber * bitmapSize + bitmapIndex;
-        }
 
         function getDrawPos(index1D) {
             let newRowSize = bitmapSize / zoomLevel;
@@ -195,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Close the connection when clicking on another zone using AbortController, signal
         const ctx = new AbortController();
-        const signal = ctx.signal;
 
         const margin = {top: 30, right: 25 + 50, bottom: 30, left: 40}
         const width = 450 + 50 - margin.left - margin.right
@@ -335,7 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .style("font-size", "22px")
             .text("Zones");
 
-        const lastUpdateZone = {};
 
         /**
          * Updates the color or text when the segmentType of the corresponding zone changes.
@@ -351,20 +346,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCurrentSegmentType(segmentType)
             }
             let color = getSegmentTypeColor(segmentType);
-            const _now = Date.now();
-            lastUpdateZone[zoneNo] = _now
             const cell = svg.selectAll("rect")
                 .filter(function (v, i) {
                     return i === zoneNo;
                 })
             cell.style("fill", color)
-
-            // Change it back to black after 1 second when it has been updated
-            setTimeout(() => {
-                if (lastUpdateZone[zoneNo] === _now) {
-                    cell.style("fill", "black")
-                }
-            }, 1000)
         }
 
         function drawZone() {
