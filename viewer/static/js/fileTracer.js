@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
             const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
             const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
-            const blockHistogram = FileInfoResponse.blockHistogram;
+            const blockHistogram = fileInfoResponse.blockHistogram;
             const zoneBitmaps = fileInfoResponse.zoneBitmaps;
             drawHistogram(blockHistogram);
             await resetZoneSegmentType();
