@@ -99,11 +99,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function updateCurrentFileList(newPathItem) {
-        let newDirPath = ''
-        if (newDirPath) {
-            newDirPath = newPathItem.path;
+        let nextDirPath = ''
+        if (newPathItem) {
+            nextDirPath = newPathItem.path;
         }
-        const response = await fetch(`/api/files?dirPath=${newDirPath}`);
+        const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
         const data = await response.json()
         const files = data['files'];
         if (newPathItem) {
