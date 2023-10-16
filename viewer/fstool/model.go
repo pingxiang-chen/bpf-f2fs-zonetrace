@@ -1,11 +1,13 @@
 package fstool
 
-type FileListType int
+type PathType int
 
 const (
-	ListTypeParent FileListType = iota
-	ListTypeFile
-	ListTypeDirectory
+	UnknownPath PathType = iota
+	MountPath
+	ParentPath
+	FilePath
+	DirectoryPath
 )
 
 type MountInfo struct {
@@ -13,8 +15,9 @@ type MountInfo struct {
 	Device    string
 }
 
-type FileListItem struct {
-	Name    string
-	SizeStr string
-	Type    FileListType
+type FileInfo struct {
+	FilePath string   `json:"file_path"`
+	Name     string   `json:"name"`
+	Type     PathType `json:"type"`
+	SizeStr  string   `json:"size_str"`
 }

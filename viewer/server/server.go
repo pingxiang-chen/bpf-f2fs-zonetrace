@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/static"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
@@ -257,6 +258,51 @@ func (s *api) streamZoneDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	query := r.URL.Query()
+	if !query.Has("dirPath") {
+		http.Error(w, "dirPath parameter is required", http.StatusBadRequest)
+		return
+	}
+	dirPath := query.Get("dirPath")
+	zoneInfo := s.znsMemory.GetZoneInfo()
+	if dirPath == "" {
+		// path 가 빈 경우 root mount path 를 반환
+		mountInfo, err := fstool.GetMountInfo(zoneInfo.Device)
+		if err != nil {
+			http.Error(w, "Error getting mount info", http.StatusInternalServerError)
+			return
+		}
+		response := &ListFilesResponse{}
+		for _, mountPath := range mountInfo.MountPath {
+			response.Files = append(response.Files, fstool.FileInfo{
+				FilePath: mountPath,
+				Name:     mountPath,
+				Type:     fstool.MountPath,
+				SizeStr:  "",
+			})
+		}
+		WriteJsonResponse(w, response)
+		return
+	}
+
+	// 특정한 path 가 주어진경우
+	files, err := fstool.ListFiles(dirPath)
+	if err != nil {
+		http.Error(w, "Error listing files", http.StatusInternalServerError)
+		return
+	}
+	response := &ListFilesResponse{
+		Files: files,
+	}
+	WriteJsonResponse(w, response)
+	return
+}
+
 // installGracefulShutdown installs a graceful shutdown for the HTTP server.
 // It will wait for the remain requests to be done and then shutdown the server.
 func installGracefulShutdown(ctx context.Context, server *http.Server) {
@@ -278,6 +324,7 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 	handler.HandleFunc("/zone/", a.htmlHandler)
 	handler.HandleFunc("/api/info/", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
+	handler.HandleFunc("/api/files", a.listFilesHandler)
 	handler.HandleFunc("/static/", a.staticsHandler)
 	handler.HandleFunc("/highlight/", a.highlightHandler)
 	handler.HandleFunc("/", a.indexHandler)

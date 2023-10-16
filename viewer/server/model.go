@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protodelim"
 
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
@@ -67,4 +68,16 @@ func (z *ZoneResponse) Serialize() []byte {
 type zoneNoSegmentTypePair struct {
 	ZoneNo      int
 	SegmentType znsmemory.SegmentType
+}
+
+type ListFilesResponse struct {
+	Files []fstool.FileInfo `json:"files"`
+}
+
+func (r *ListFilesResponse) Serialize() []byte {
+	b, err := json.Marshal(r)
+	if err != nil {
+		fmt.Printf("error serializing list files response: %v\n", err)
+	}
+	return b
 }
