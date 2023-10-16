@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateZoneSegmentType(zoneIndex, 7)
                 if (currentZoneId === zoneIndex) {
                     isCurrentZoneExist = true;
-                    document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
+                    document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNo])
                     drawZone();
                 }
             }
