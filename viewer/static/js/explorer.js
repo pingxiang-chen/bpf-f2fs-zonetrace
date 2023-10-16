@@ -100,29 +100,31 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
-    async function updateCurrentFileList(newPathItem) {
-        console.log('newPathItem', newPathItem)
+    async function updateCurrentFileList(selectedItem) {
+        console.log('newPathItem', selectedItem)
         let nextDirPath = ''
-        if (newPathItem) {
-            nextDirPath = newPathItem.path;
+        let prevDir;
+        if (selectedItem) {
+            nextDirPath = selectedItem.path;
+            prevDir = selectedItem.parent;
         }
-        const prevDir = newPathItem
+
         const isHome = nextDirPath === '';
 
         const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
         const data = await response.json()
         const files = data['files'];
         const newFileSystem = [];
-        if (!isHome) {
-            newFileSystem.push({
-                type: TYPE_HOME,
-                iconType: ICON_HOME,
-                name: '',
-                size: '',
-                path: '',
-            });
-        }
-        if (prevDir) {
+        newFileSystem.push({
+            type: TYPE_HOME,
+            iconType: ICON_HOME,
+            name: '',
+            size: '',
+            path: '',
+            parent: null,
+        });
+
+        if (!isHome && prevDir) {
             newFileSystem.push({
                 type: prevDir['type'],
                 iconType: ICON_PARENT,
@@ -139,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: fileInfo['name'],
                 size: fileInfo['size_str'],
                 path: fileInfo['file_path'],
+                parent: selectedItem,
             });
         }
         // 파일 시스템 채우기
