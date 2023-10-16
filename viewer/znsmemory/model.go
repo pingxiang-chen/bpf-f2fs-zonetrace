@@ -116,8 +116,8 @@ type ZonedStorage struct {
 }
 
 type Fibmap struct {
-	FilePos  int
-	StartBlk int
-	EndBlk   int
+	FilePos  int64
+	StartBlk int64
+	EndBlk   int64
 	Blks     int
 }
