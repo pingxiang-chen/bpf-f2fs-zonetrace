@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protodelim"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
@@ -98,15 +99,14 @@ func (r *FileInfoResponse) Serialize() []byte {
 	for k, v := range r.BlockHistogram {
 		blockHistogram[int32(k)] = int32(v)
 	}
-	proto := protos.FileInfoResponse{
+	msg := protos.FileInfoResponse{
 		FilePath:       r.FilePath,
 		ZoneBitmaps:    zoneBitmaps,
 		BlockHistogram: blockHistogram,
 	}
-	buf := bytes.NewBuffer(make([]byte, 0, 1024))
-	_, err := protodelim.MarshalTo(buf, &proto)
+	b, err := proto.Marshal(&msg)
 	if err != nil {
 		fmt.Printf("error serializing file info response: %v\n", err)
 	}
-	return buf.Bytes()
+	return b
 }
