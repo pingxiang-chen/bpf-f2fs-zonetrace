@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 } else if (item.type !== 'file') {
                     if (!item.children) {
-                        updateCurrentFileList(item.path);
+                        updateCurrentFileList(item);
                     }
                 }
 
