@@ -119,33 +119,39 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = await response.json()
         const files = data['files'];
         const newFileSystem = [];
-        newFileSystem.push({
+        const root = {
             type: TYPE_HOME,
             iconType: ICON_HOME,
             name: '',
             size: '',
             path: '',
             parent: null,
-        });
+        };
+        newFileSystem.push(root);
 
-        if (!isHome && selectedItem) {
+        if (!isHome && selectedItem && selectedItem.parent) {
+            const parent = selectedItem.parent;
             newFileSystem.push({
-                type: selectedItem['type'],
+                type: parent['type'],
                 iconType: ICON_PARENT,
                 name: '..',
-                size: selectedItem['size'],
-                path: selectedItem['path'],
+                size: parent['size'],
+                path: parent['path'],
             });
         }
 
         for (const fileInfo of files) {
+            let parent = selectedItem;
+            if (!parent) {
+                parent = root;
+            }
             newFileSystem.push({
                 iconType: getIconType(fileInfo['type']),
                 type: fileInfo['type'],
                 name: fileInfo['name'],
                 size: fileInfo['size_str'],
                 path: fileInfo['file_path'],
-                parent: selectedItem,
+                parent: parent,
             });
         }
         // 파일 시스템 채우기
