@@ -390,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     color = "white";
                 }
                 const colorIndex = getColorMapIndex(y, i);
+                console.log(colorIndex)
                 if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
                     console.log(`${colorIndex} is green`)
                     color = 'green';
