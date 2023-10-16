@@ -344,6 +344,12 @@ func (s *api) getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
 		// If the segment is empty, we leave the pre-filled zeros in place.
 	}
 
+	fmt.Printf("File path: %s\n", fileInfo.FilePath)
+	for i, bytes := range zoneBlocks {
+		fmt.Printf("Zone %d: %d bytes\n", i, len(bytes))
+	}
+	fmt.Println("====================================")
+
 	histogram := make(map[int]int)
 	for _, fibmap := range fileInfo.Fibmaps {
 		histogram[fibmap.Blks] = histogram[fibmap.Blks] + 1
