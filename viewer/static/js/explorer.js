@@ -91,14 +91,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function decompressRLE(data) {
         let decompressed = [];
+        let byteValue = 0;
+        let bitPosition = 7;
 
         for (let i = 0; i < data.length; i += 2) {
-            let value = data[i];
+            let bitValue = data[i];
             let count = data[i + 1];
 
             for (let j = 0; j < count; j++) {
-                decompressed.push(value);
+                byteValue |= (bitValue << bitPosition);
+                bitPosition--;
+
+                if (bitPosition < 0) {
+                    decompressed.push(byteValue);
+                    byteValue = 0;
+                    bitPosition = 7;
+                }
             }
+        }
+
+        if (bitPosition < 7) {
+            decompressed.push(byteValue);
         }
 
         return new Uint8Array(decompressed);
