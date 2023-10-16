@@ -93,9 +93,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function updateCurrentFileList(dirPath) {
         const response = await fetch(`/api/files?dirPath=${dirPath}`);
-        console.log(response)
+        const data = await response.json()
         fileSystem.length = 0; // clear fileSystem
-        for (const fileInfo of response['files']) {
+        for (const fileInfo of data['files']) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
                 name: fileInfo['name'],
