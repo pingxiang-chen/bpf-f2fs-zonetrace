@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
         const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
         const zoneBitmaps = fileInfoResponse.zoneBitmaps;
+        document.fileInfoResponse = fileInfoResponse;
         document.zoneBitmaps = zoneBitmaps;
         for (const zoneNo of zoneBitmaps) {
             document.zoneBlockBitMap[zoneNo] = decompressRLE(value)
