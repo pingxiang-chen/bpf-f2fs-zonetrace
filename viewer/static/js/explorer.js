@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
+                } else if (item.type === TYPE_HOME) {
+                    updateCurrentFileList(null);
                 } else if (item.type !== TYPE_FILE) {
                     if (!item.children) {
                         updateCurrentFileList(item);
@@ -101,15 +103,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function updateCurrentFileList(selectedItem) {
-        console.log('newPathItem', selectedItem)
         let nextDirPath = ''
         let prevDir;
+        const isHome = !selectedItem
         if (selectedItem) {
             nextDirPath = selectedItem.path;
             prevDir = selectedItem.parent;
         }
-
-        const isHome = nextDirPath === '';
 
         const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
         const data = await response.json()
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             newFileSystem.push({
                 type: prevDir['type'],
                 iconType: ICON_PARENT,
-                name: prevDir['name'],
+                name: '..',
                 size: prevDir['size'],
                 path: prevDir['path'],
             });
@@ -148,6 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
         populateFileSystem(newFileSystem);
     }
 
-    updateCurrentFileList('');
+    updateCurrentFileList(null);
 
 });
