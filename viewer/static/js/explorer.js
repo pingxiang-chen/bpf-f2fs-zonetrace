@@ -50,11 +50,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const iconNode = itemNode.append('i')
             .attr('class', `${item.iconType} icon clickable`);
 
-        // 클릭 이벤트 핸들러를 아이콘에도 추가합니다.
-        iconNode.on('click', function (event) {
-            // 이 부분에 원하는 동작을 구현합니다.
-            // 예를 들어, 폴더 아이콘을 클릭했을 때의 동작을 여기에 추가할 수 있습니다.
-            // 아래는 'file-info' 요소에 추가된 이벤트 핸들러의 로직을 반복하는 예입니다.
+        // 클릭 이벤트를 처리하는 공통 함수
+        function handleItemClick(event) {
+            // 여기에 클릭 이벤트에 대한 공통 로직을 작성합니다.
             if (item.type === 'folder') {
                 const list = d3.select(this.parentNode).select('.list');
                 list.style('display', list.style('display') === 'none' ? 'block' : 'none');
@@ -68,10 +66,15 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (item.type === TYPE_FILE) {
                 console.log(item.path);
             }
-        });
+        }
+
+        // 클릭 이벤트 리스너를 요소에 추가합니다.
+        iconNode.on('click', handleItemClick);
 
         const content = itemNode.append('div').attr('class', 'content');
-        const fileInfo = content.append('div').attr('class', 'file-info clickable')
+        const fileInfo = content.append('div')
+            .attr('class', 'file-info clickable')
+            .on('click', handleItemClick);  // 같은 핸들러를 사용합니다.
 
         fileInfo.append('div')
             .attr('class', 'header')
