@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    let currentPath = "";
+    let previousPath = "";
 
     function getIconType(pathType) {
         switch (pathType) {
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 }
                 if (!item.children) {
-                    updateCurrentFileList(currentPath);
+                    updateCurrentFileList(previousPath);
                 }
             });
 
@@ -98,15 +98,20 @@ document.addEventListener('DOMContentLoaded', function () {
     async function updateCurrentFileList(newDirPath) {
         const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
-        // find previous directory
-        const prevDir = data.find((item) => item.file_path === currentPath);
-        fileSystem.length = 0; // clear fileSystem
-        fileSystem.push({
-            iconType: 'arrow left',
-            name: prevDir['name'],
-            size: prevDir['size_str'],
-            path: prevDir['file_path'],
-        });
+        if (previousPath === "") {
+            // find previous directory
+            const prevDir = data.find((item) => item.file_path === previousPath);
+            fileSystem.length = 0; // clear fileSystem
+            fileSystem.push({
+                iconType: 'arrow left',
+                name: prevDir['name'],
+                size: prevDir['size_str'],
+                path: prevDir['file_path'],
+            });
+        } else {
+            fileSystem.length = 0; // clear fileSystem
+        }
+
         for (const fileInfo of data['files']) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
@@ -115,11 +120,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 path: fileInfo['file_path'],
             });
         }
-        currentPath = newDirPath;
+        previousPath = newDirPath;
         // 파일 시스템 채우기
         populateFileSystem(fileSystem);
     }
 
-    updateCurrentFileList(currentPath);
+    updateCurrentFileList(previousPath);
 
 });
