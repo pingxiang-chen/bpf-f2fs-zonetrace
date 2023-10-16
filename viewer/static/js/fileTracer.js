@@ -335,54 +335,71 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         /* ---------- Draw the histogram ---------- */
-        drawHistorgram = () => {
-            const data = {'34k': 23, '64k': 54};
-            // set the dimensions and margins of the graph
+        function drawHistogram(data) {
+            // clear the existing svg if any
+            d3.select("#histogram").select("svg").remove();
+
             const margin = {top: 10, right: 30, bottom: 30, left: 40},
                 width = 460 - margin.left - margin.right,
                 height = 400 - margin.top - margin.bottom;
 
-            // append the svg object to the body of the page
             const histogram = d3.select("#histogram")
                 .append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform",
-                    `translate(${margin.left},${margin.top})`);
+                .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // given data
-            const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
+            if (data !== null) {
+                const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
 
-            // X axis: scale and draw:
-            const x = d3.scaleBand()
-                .domain(dataArray.map(d => d.key))
-                .range([0, width])
-                .padding(0.1);
-            histogram.append("g")
-                .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(x));
+                const x = d3.scaleBand()
+                    .domain(dataArray.map(d => d.key))
+                    .range([0, width])
+                    .padding(0.1);
+                histogram.append("g")
+                    .attr("transform", `translate(0, ${height})`)
+                    .call(d3.axisBottom(x));
 
-            // Y axis: scale and draw:
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(dataArray, d => d.value)])
-                .nice()  // extends the domain to nice round numbers
-                .range([height, 0]);
-            histogram.append("g")
-                .call(d3.axisLeft(y));
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(dataArray, d => d.value)])
+                    .nice()
+                    .range([height, 0]);
+                histogram.append("g")
+                    .call(d3.axisLeft(y));
 
-            // append the bar rectangles to the svg element
-            histogram.selectAll("rect")
-                .data(dataArray)
-                .enter()
-                .append("rect")
-                .attr("x", d => x(d.key))
-                .attr("y", d => y(d.value))
-                .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d.value))
-                .style("fill", "#69b3a2");
+                const tooltip = d3.select("body").append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+
+                histogram.selectAll("rect")
+                    .data(dataArray)
+                    .enter()
+                    .append("rect")
+                    .attr("x", d => x(d.key))
+                    .attr("y", d => y(d.value))
+                    .attr("width", x.bandwidth())
+                    .attr("height", d => height - y(d.value))
+                    .style("fill", "#69b3a2")
+                    .on("mouseover", function (event, d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(d.value)
+                            .style("left", (event.pageX + 5) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function (d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
+            }
         }
-        drawHistorgram()
+
+// Call the function with data
+        const data = {'34k': 23, '64k': 54};
+        drawHistogram(data);
 
         /* ---------- End of drawing histogram ---------- */
 
