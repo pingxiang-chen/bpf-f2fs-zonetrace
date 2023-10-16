@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function updateCurrentFileList(newPathItem) {
         console.log('newPathItem', newPathItem)
         let nextDirPath = ''
-        if (newPathItem) {
+        if (newPathItem && newPathItem.type !== TYPE_ROOT) {
             nextDirPath = newPathItem.path;
         }
         const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
