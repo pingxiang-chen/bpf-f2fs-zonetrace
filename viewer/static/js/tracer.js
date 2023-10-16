@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded with JavaScript');
 
     /**
      * Get the last segment from the specified URL path.
