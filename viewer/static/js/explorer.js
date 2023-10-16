@@ -75,12 +75,12 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
-    async function updateCurrentFileList() {
-        const response = await fetch(`/api/files?dirPath=${currentZoneId}`);
+    async function updateCurrentFileList(dirPath) {
+        const response = await fetch(`/api/files?dirPath=${dirPath}`);
         console.log(response);
     }
 
-    updateCurrentFileList();
+    updateCurrentFileList(currentPath);
 
     // 페이지 로드 시 파일 시스템 채우기
     populateFileSystem();
