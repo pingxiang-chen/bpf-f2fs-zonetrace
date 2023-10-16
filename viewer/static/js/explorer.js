@@ -12,32 +12,13 @@ const ICON_FILE = 'file outline'
 const ICON_DIRECTORY = 'folder'
 const ICON_HOME = 'home'
 
+document.zoneBlockBitMap = {};
+
 document.addEventListener('DOMContentLoaded', function () {
 
     function getIconType(pathType) {
         return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
     }
-
-    // 예시 파일 시스템 데이터
-    // const fileSystem = [
-    //     {iconType: 'arrow left', name: '..'},
-    //     {
-    //         iconType: 'folder',
-    //         name: 'Documents',
-    //         children: [
-    //             {iconType: 'file', name: 'report.pdf', size: '200KB'},
-    //             {iconType: 'file', name: 'essay.docx', size: '1MB'}
-    //         ]
-    //     },
-    //     {
-    //         iconType: 'folder',
-    //         name: 'Music',
-    //         children: [
-    //             {iconType: 'file', name: 'song.mp3', size: '5MB'}
-    //         ]
-    //     },
-    //     {iconType: 'file', name: 'todo.txt', size: '50KB'}
-    // ];
 
 // 파일 및 폴더 항목을 생성하는 함수
     function createFileSystemItem(item) {
@@ -108,6 +89,21 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
+    function decompressRLE(data) {
+        let decompressed = [];
+
+        for (let i = 0; i < data.length; i += 2) {
+            let value = data[i];
+            let count = data[i + 1];
+
+            for (let j = 0; j < count; j++) {
+                decompressed.push(value);
+            }
+        }
+
+        return new Uint8Array(decompressed);
+    }
+
 
     async function getFileInfo(filePath) {
         const root = await protobuf.load("/static/zns.proto");
@@ -115,8 +111,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
         const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
         const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
+        fileInfoResponse.zoneBitmaps.forEach(
+            function (value, key) {
+                document.zoneBlockBitMap[key] = decompressRLE(value)
+            }
+        )
         console.log(fileInfoResponse);
-        return fileInfoResponse;  // Now fileInfoResponse is a deserialized object of type FileInfoResponse
     }
 
     async function updateCurrentFileList(selectedItem) {
