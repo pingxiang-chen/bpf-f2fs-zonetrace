@@ -26,11 +26,6 @@ var tracerJsFile []byte
 //go:embed js/fileTracer.js
 var fileTracerJsFile []byte
 
-// explorerJsFile reads the `js/explorer.js` file and stores its bytes.
-//
-//go:embed js/explorer.js
-var explorerJsFile []byte
-
 type ServingFile struct {
 	File        []byte
 	ContentType string
@@ -47,10 +42,6 @@ var ServingFileMap = map[string]ServingFile{
 	},
 	"js/fileTracer.js": {
 		File:        fileTracerJsFile,
-		ContentType: "text/javascript",
-	},
-	"js/explorer.js": {
-		File:        explorerJsFile,
 		ContentType: "text/javascript",
 	},
 }

@@ -1,4 +1,204 @@
+const TYPE_UNKNOWN = 0
+const TYPE_ROOT = 1
+const TYPE_PARENT = 2
+const TYPE_FILE = 3
+const TYPE_DIRECTORY = 4
+const TYPE_HOME = 5
+
+const ICON_UNKNOWN = 'question circle'
+const ICON_ROOT = 'disk'
+const ICON_PARENT = 'arrow left'
+const ICON_FILE = 'file outline'
+const ICON_DIRECTORY = 'folder'
+const ICON_HOME = 'home'
+
+function getIconType(pathType) {
+    return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
+}
+
+class Blocks {
+    constructor(rleCompressedData) {
+        this.decompressedData = this.decompressRLE(rleCompressedData); // RLE로 압축된 데이터를 디컴프레스합니다.
+    }
+
+    // 주어진 데이터를 디컴프레스하는 함수
+    decompressRLE(data) {
+        let decompressed = [];
+        let byteValue = 0;
+        let bitPosition = 7;
+
+        for (let i = 0; i < data.length; i += 2) {
+            let bitValue = data[i];
+            let count = data[i + 1];
+
+            for (let j = 0; j < count; j++) {
+                byteValue |= (bitValue << bitPosition);
+                bitPosition--;
+
+                if (bitPosition < 0) {
+                    decompressed.push(byteValue);
+                    byteValue = 0;
+                    bitPosition = 7;
+                }
+            }
+        }
+
+        if (bitPosition < 7) {
+            decompressed.push(byteValue);
+        }
+
+        return new Uint8Array(decompressed);
+    }
+
+    // n번째 인덱스의 비트가 1인지 0인지를 확인하는 메서드
+    isBitSet(n) {
+        const byteIndex = Math.floor(n / 8);
+        const bitIndex = 7 - (n % 8); // 왼쪽부터 0번 비트이므로 7에서 뺍니다.
+        return (this.decompressedData[byteIndex] & (1 << bitIndex)) !== 0;
+    }
+}
+
+let currentZoneBlocks;
+
+
 document.addEventListener('DOMContentLoaded', function () {
+
+
+    // 파일 및 폴더 항목을 생성하는 함수
+    function createFileSystemItem(item) {
+        // 파일 시스템 아이템을 UI에 추가합니다.
+        const itemNode = d3.select('#file-system')
+            .append('div')
+            .attr('class', 'item');
+
+        // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
+        const iconNode = itemNode.append('i')
+            .attr('class', `${item.iconType} icon clickable`);
+
+        // 클릭 이벤트를 처리하는 공통 함수
+        function handleItemClick(event) {
+            // 여기에 클릭 이벤트에 대한 공통 로직을 작성합니다.
+            if (item.type === 'folder') {
+                const list = d3.select(this.parentNode).select('.list');
+                list.style('display', list.style('display') === 'none' ? 'block' : 'none');
+            } else if (item.type === TYPE_HOME) {
+                updateCurrentFileList(null);
+            } else if (item.type !== TYPE_FILE) {
+                if (!item.children) {
+                    updateCurrentFileList(item);
+                }
+            } else if (item.type === TYPE_FILE) {
+                console.log(item.path);
+                getFileInfo(item.path)
+            }
+        }
+
+        // 클릭 이벤트 리스너를 요소에 추가합니다.
+        iconNode.on('click', handleItemClick);
+
+        const content = itemNode.append('div').attr('class', 'content');
+        const fileInfo = content.append('div')
+            .attr('class', 'file-info clickable')
+            .on('click', handleItemClick);  // 같은 핸들러를 사용합니다.
+
+        fileInfo.append('div')
+            .attr('class', 'header')
+            .text(item.name);
+
+        if (item.size) {
+            fileInfo.append('div')
+                .attr('class', 'file-size')
+                .text(item.size);
+        }
+
+        if (item.type === 'folder') {
+            // 하위 폴더 및 파일 목록을 생성하고 숨깁니다.
+            var list = content.append('div').attr('class', 'list');
+            list.selectAll('.item')
+                .data(item.children)
+                .enter()
+                .append(createFileSystemItem);
+            list.style('display', 'none');
+        }
+
+        return itemNode.node();
+    }
+
+    // 파일 시스템을 UI 리스트에 추가하는 함수
+    function populateFileSystem(fileSystemData) {
+        d3.select('#file-system').selectAll('.item').remove();
+        d3.select('#file-system').selectAll('.item')
+            .data(fileSystemData)
+            .enter()
+            .append(createFileSystemItem);
+    }
+
+    async function getFileInfo(filePath) {
+        const root = await protobuf.load("/static/zns.proto");
+        const FileInfoResponse = root.lookupType('FileInfoResponse');
+        const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
+        const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
+        const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
+        const zoneBitmaps = fileInfoResponse.zoneBitmaps;
+        Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
+            if (currentZoneId === Number(zoneNumber)) {
+                currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
+            }
+        });
+    }
+
+    async function updateCurrentFileList(selectedItem) {
+        let nextDirPath = ''
+        const isHome = !selectedItem
+        if (selectedItem) {
+            nextDirPath = selectedItem.path;
+        }
+
+        const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
+        const data = await response.json()
+        const files = data['files'];
+        const newFileSystem = [];
+        const root = {
+            type: TYPE_HOME,
+            iconType: ICON_HOME,
+            name: '',
+            size: '',
+            path: '',
+            parent: null,
+        };
+        newFileSystem.push(root);
+
+        if (!isHome && selectedItem && selectedItem.parent) {
+            const parent = selectedItem.parent;
+            newFileSystem.push({
+                type: parent['type'],
+                iconType: ICON_PARENT,
+                name: '..',
+                size: parent['size'],
+                path: parent['path'],
+                parent: parent.parent || null,
+            });
+        }
+
+        for (const fileInfo of files) {
+            let parent = selectedItem;
+            if (!parent) {
+                parent = root;
+            }
+            newFileSystem.push({
+                iconType: getIconType(fileInfo['type']),
+                type: fileInfo['type'],
+                name: fileInfo['name'],
+                size: fileInfo['size_str'],
+                path: fileInfo['file_path'],
+                parent: parent,
+            });
+        }
+        // 파일 시스템 채우기
+        populateFileSystem(newFileSystem);
+    }
+
+
 
     /**
      * Get the last segment from the specified URL path.
@@ -198,11 +398,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     color = "white";
                 }
                 const colorIndex = getColorMapIndex(y, i);
-
-                if (currentFileCellMap[colorIndex] === 1) {
+                if (currentZoneBlocks && currentZoneBlocks.isBitSet(colorIndex)) {
                     color = 'green';
                 }
-
                 if (cellColorMap[colorIndex] === color) {
                     return;
                 }
@@ -449,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         handleStreamData();
+        updateCurrentFileList(null);
 
         /* ---------- end of main ---------- */
     }
