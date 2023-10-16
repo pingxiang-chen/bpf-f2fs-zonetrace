@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function updateCurrentFileList() {
-        const response = await fetch(`api/files?dirPath=${currentZoneId}`);
+        const response = await fetch(`/api/files?dirPath=${currentZoneId}`);
         console.log(response);
     }
 
