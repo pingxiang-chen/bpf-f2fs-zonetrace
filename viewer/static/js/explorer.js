@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
         const files = data['files'];
-        if (previousPath === "") {
+        if (!!previousPath) {
             // find previous directory
             const prevDir = files.find((item) => item.file_path === previousPath);
             fileSystem.length = 0; // clear fileSystem
