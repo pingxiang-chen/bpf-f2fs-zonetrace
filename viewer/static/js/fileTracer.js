@@ -68,6 +68,11 @@ let reDrawCanvas = async () => {
     // it will be re-declared later
 };
 
+const onChangeCellSize = () => {
+    cellSize = Number(document.getElementById('cellSizeInput').value);
+    reDrawCanvas();
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
     // 파일 및 폴더 항목을 생성하는 함수
@@ -290,11 +295,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // divisors.sort((a, b) => a - b);
         return divisors;
-    }
-
-    const onChangeCellSize = () => {
-        cellSize = Number(document.getElementById('cellSizeInput').value);
-        reDrawCanvas();
     }
 
 
