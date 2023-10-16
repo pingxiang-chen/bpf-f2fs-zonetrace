@@ -8,7 +8,7 @@ const TYPE_HOME = 5
 const ICON_UNKNOWN = 'question circle'
 const ICON_ROOT = 'disk'
 const ICON_PARENT = 'arrow left'
-const ICON_FILE = 'file'
+const ICON_FILE = 'file outline'
 const ICON_DIRECTORY = 'folder'
 const ICON_HOME = 'home'
 
