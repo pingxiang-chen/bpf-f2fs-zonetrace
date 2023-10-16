@@ -350,23 +350,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
+            const x = d3.scaleBand()
+                .domain(data !== null ? Object.keys(data) : [])
+                .range([0, width])
+                .padding(0.1);
+            histogram.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x));
+
+            const y = d3.scaleLinear()
+                .domain([0, data !== null ? d3.max(Object.values(data)) : 0])
+                .nice()
+                .range([height, 0]);
+            histogram.append("g")
+                .call(d3.axisLeft(y));
+
             if (data !== null) {
                 const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
-
-                const x = d3.scaleBand()
-                    .domain(dataArray.map(d => d.key))
-                    .range([0, width])
-                    .padding(0.1);
-                histogram.append("g")
-                    .attr("transform", `translate(0, ${height})`)
-                    .call(d3.axisBottom(x));
-
-                const y = d3.scaleLinear()
-                    .domain([0, d3.max(dataArray, d => d.value)])
-                    .nice()
-                    .range([height, 0]);
-                histogram.append("g")
-                    .call(d3.axisLeft(y));
 
                 const tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
             }
         }
+
 
         /* ---------- End of drawing histogram ---------- */
 
@@ -450,8 +451,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
             const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
             const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
-            document.fileInfoResponse = fileInfoResponse;
+            const blockHistogram = FileInfoResponse.blockHistogram;
             const zoneBitmaps = fileInfoResponse.zoneBitmaps;
+            drawHistogram(blockHistogram);
             await resetZoneSegmentType();
             let isCurrentZoneExist = false;
             for (let zoneNo of Object.keys(zoneBitmaps)) {
