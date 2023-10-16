@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function updateCurrentFileList(dirPath) {
         const response = await fetch(`/api/files?dirPath=${dirPath}`);
-        // clear fileSystem
-        fileSystem.length = 0;
+        console.log(response)
+        fileSystem.length = 0; // clear fileSystem
         for (const fileInfo of response['files']) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
