@@ -60,10 +60,16 @@ class Blocks {
 
 let currentZoneBlocks;
 
+let onChangeBlockSize = () => {
+    // it will be re-declared later
+}
+
+let reDrawCanvas = async () => {
+    // it will be re-declared later
+};
+
 
 document.addEventListener('DOMContentLoaded', function () {
-
-
     // 파일 및 폴더 항목을 생성하는 함수
     function createFileSystemItem(item) {
         // 파일 시스템 아이템을 UI에 추가합니다.
@@ -200,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-
     /**
      * Get the last segment from the specified URL path.
      *
@@ -292,13 +297,6 @@ document.addEventListener('DOMContentLoaded', function () {
         reDrawCanvas();
     }
 
-    let onChangeBlockSize = () => {
-        // it will be re-declared later
-    }
-
-    let reDrawCanvas = async () => {
-        // it will be re-declared later
-    };
 
     /**
      * Main function.
