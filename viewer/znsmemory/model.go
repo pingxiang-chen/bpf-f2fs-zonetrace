@@ -57,8 +57,9 @@ type SitEntryUpdate struct {
 }
 
 type ZoneInfo struct {
-	// Device is the device name like: nvme0n1p1
-	Device                  string
+	// RegularDeviceName is the device name like: nvme0n1p1
+	RegularDeviceName       string
+	ZNSDeviceName           string
 	TotalZone               int
 	BlockPerSegment         int
 	TotalBlockPerZone       int
