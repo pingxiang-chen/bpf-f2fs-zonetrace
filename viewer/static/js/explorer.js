@@ -57,10 +57,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
+                } else if (item.type !== 'file') {
+                    if (!item.children) {
+                        updateCurrentFileList(item.path);
+                    }
                 }
-                if (!item.children) {
-                    updateCurrentFileList(item.path);
-                }
+
             });
 
         fileInfo.append('div')
@@ -99,9 +101,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
         const files = data['files'];
-        if (!!previousPath) {
+        if (previousPath !== '') {
             // find previous directory
             const prevDir = files.find((item) => item.file_path === previousPath);
+            console.log('prevDir', prevDir);
             fileSystem.length = 0; // clear fileSystem
             fileSystem.push({
                 iconType: 'arrow left',
