@@ -1,21 +1,20 @@
-let previousPath = "";
+const TYPE_UNKNOWN = 0
+const TYPE_ROOT = 1
+const TYPE_PARENT = 2
+const TYPE_FILE = 3
+const TYPE_DIRECTORY = 4
+
+
+const ICON_UNKNOWN = 'question circle'
+const ICON_ROOT = 'disk'
+const ICON_PARENT = 'arrow left'
+const ICON_FILE = 'file'
+const ICON_DIRECTORY = 'folder'
 
 document.addEventListener('DOMContentLoaded', function () {
 
     function getIconType(pathType) {
-        switch (pathType) {
-            case 0: // UnknownPath
-                return 'question circle';
-            case 1: // RootPath
-                return 'disk';
-            case 2: // ParentPath
-                return 'arrow left';
-            case 3: // FilePath
-                return 'file';
-            case 4: // DirectoryPath
-                return 'folder';
-        }
-        return 'question circle'; // UnknownPath
+        return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY][pathType]
     }
 
     // 예시 파일 시스템 데이터
@@ -58,10 +57,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
-                } else if (item.type !== 'file') {
+                } else if (item.type !== TYPE_FILE) {
                     if (!item.children) {
                         updateCurrentFileList(item);
                     }
+                } else if (item.type === TYPE_FILE) {
+                    console.log(item.path)
                 }
 
             });
@@ -110,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const prevDir = newPathItem
             fileSystem.length = 0; // clear fileSystem
             fileSystem.push({
+                type: prevDir['type'],
                 iconType: 'arrow left',
                 name: prevDir['name'],
                 size: prevDir['size_str'],
@@ -122,6 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
         for (const fileInfo of files) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
+                type: fileInfo['type'],
                 name: fileInfo['name'],
                 size: fileInfo['size_str'],
                 path: fileInfo['file_path'],
