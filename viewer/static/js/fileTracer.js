@@ -334,6 +334,47 @@ document.addEventListener('DOMContentLoaded', function () {
             .text("Zones");
 
 
+        /* ---------- Draw the histogram ---------- */
+
+        const data = {'34k': 23, '64k': 54};
+
+        const histogram = d3.select("#histogram")
+            .append("svg")
+            .attr("width", 460)
+            .attr("height", 400);
+
+        const dataArray = Object.entries(data).map(([key, value]) => ({key, value}));
+
+        const x = d3.scaleBand()
+            .domain(dataArray.map(d => d.key))
+            .range([40, 420])  // Adjusted range to account for missing margins
+            .padding(0.1);
+        histogram.append("g")
+            .attr("transform", `translate(0, 370)`)  // Adjusted transform to account for missing margins
+            .call(d3.axisBottom(x));
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(dataArray, d => d.value)])
+            .nice()
+            .range([370, 10]);  // Adjusted range to account for missing margins
+        histogram.append("g")
+            .attr("transform", `translate(40, 0)`)  // Adjusted transform to account for missing margins
+            .call(d3.axisLeft(y));
+
+        histogram.selectAll("rect")
+            .data(dataArray)
+            .enter()
+            .append("rect")
+            .attr("x", d => x(d.key))
+            .attr("y", d => y(d.value))
+            .attr("width", x.bandwidth())
+            .attr("height", d => 370 - y(d.value))  // Adjusted height to account for missing margins
+            .style("fill", "#69b3a2");
+
+
+        /* ---------- End of drawing histogram ---------- */
+
+
         /**
          * Updates the color or text when the segmentType of the corresponding zone changes.
          *
