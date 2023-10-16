@@ -397,10 +397,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-// Call the function with data
-        const data = {'34k': 23, '64k': 54};
-        drawHistogram(data);
-
         /* ---------- End of drawing histogram ---------- */
 
 
@@ -454,6 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
             const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
             const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
+            document.fileInfoResponse = fileInfoResponse;
             const zoneBitmaps = fileInfoResponse.zoneBitmaps;
             await resetZoneSegmentType();
             let isCurrentZoneExist = false;
@@ -642,6 +639,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         drawZone();
         updateCurrentFileList(null);
+        drawHistogram(null);
 
         /* ---------- end of main ---------- */
     }
