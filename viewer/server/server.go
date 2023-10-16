@@ -272,7 +272,7 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	zoneInfo := s.znsMemory.GetZoneInfo()
 	if dirPath == "" {
 		// path 가 빈 경우 root mount path 를 반환
-		mountInfo, err := fstool.GetMountInfo(zoneInfo.RegularDeviceName)
+		mountInfo, err := fstool.GetMountInfo(zoneInfo.ZNSDeviceName)
 		if err != nil {
 			http.Error(w, "Error getting mount info", http.StatusInternalServerError)
 			return
