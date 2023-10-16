@@ -71,14 +71,20 @@ type ZoneInfo struct {
 type FileInfo struct {
 	FilePath     string
 	FileSegments []FileSegment
-	Fibmaps		[]Fibmap
+	Fibmaps      []Fibmap
+}
+
+type FileResponse struct {
+	FilePath       string
+	ZoneBitmaps    map[int][]byte
+	BlockHistogram map[int]int
 }
 
 type FileSegment struct {
-	ZoneIndex    int
-	SegmentIndex int
+	ZoneIndex            int
+	SegmentIndex         int
 	RelativeSegmentIndex int
-	ValidMap     ValidMap // 해당하는것을 1로 바꾼 512bit
+	ValidMap             ValidMap // 해당하는것을 1로 바꾼 512bit
 }
 
 type Zone struct {

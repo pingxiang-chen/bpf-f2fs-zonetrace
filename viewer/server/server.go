@@ -305,6 +305,59 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (s *api) getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	query := r.URL.Query()
+	if !query.Has("filePath") {
+		http.Error(w, "filePath parameter is required", http.StatusBadRequest)
+		return
+	}
+	filePath := query.Get("filePath")
+	znsInfo := s.znsMemory.GetZoneInfo()
+	fileInfo, err := znsmemory.GetFileInfo(znsInfo, filePath)
+	if err != nil {
+		http.Error(w, "Error getting file info", http.StatusInternalServerError)
+		return
+	}
+
+	segmentSize := znsInfo.BlockPerSegment / 8 // Assuming 512 bits/8 = 64 bytes
+	zoneBlocks := make(map[int][]byte)
+
+	for _, segmentInfo := range fileInfo.FileSegments {
+		zoneBlock, ok := zoneBlocks[segmentInfo.ZoneIndex]
+		if !ok {
+			// Create a new block with the correct size, pre-filled with zeros
+			zoneBlock = make([]byte, znsInfo.TotalSegmentPerZone*segmentSize)
+			zoneBlocks[segmentInfo.ZoneIndex] = zoneBlock
+		}
+
+		if len(segmentInfo.ValidMap) > 0 {
+			// Calculate the start position of the segment in the zoneBlock
+			i := segmentInfo.RelativeSegmentIndex * segmentSize
+			// Copy the data into the zoneBlock
+			copy(zoneBlock[i:], segmentInfo.ValidMap)
+			// There is no need to reassign the slice to the map because we're modifying the contents directly, not the slice header.
+		}
+		// If the segment is empty, we leave the pre-filled zeros in place.
+	}
+
+	histogram := make(map[int]int)
+	for _, fibmap := range fileInfo.Fibmaps {
+		histogram[fibmap.Blks] = histogram[fibmap.Blks] + 1
+	}
+
+	response := &FileInfoResponse{
+		FilePath:       fileInfo.FilePath,
+		ZoneBitmaps:    zoneBlocks,
+		BlockHistogram: histogram,
+	}
+	WriteProtoBuf(w, response)
+	return
+}
+
 // installGracefulShutdown installs a graceful shutdown for the HTTP server.
 // It will wait for the remain requests to be done and then shutdown the server.
 func installGracefulShutdown(ctx context.Context, server *http.Server) {
@@ -327,6 +380,7 @@ func New(ctx context.Context, znsMemory znsmemory.ZNSMemory, port int) *http.Ser
 	handler.HandleFunc("/api/info/", a.zoneInfoHandler)
 	handler.HandleFunc("/api/zone/", a.streamZoneDataHandler)
 	handler.HandleFunc("/api/files", a.listFilesHandler)
+	handler.HandleFunc("/api/fileInfo", a.getFileInfoHandler)
 	handler.HandleFunc("/static/", a.staticsHandler)
 	handler.HandleFunc("/highlight/", a.highlightHandler)
 	handler.HandleFunc("/", a.indexHandler)
