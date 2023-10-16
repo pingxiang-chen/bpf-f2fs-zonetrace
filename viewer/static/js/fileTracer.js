@@ -455,7 +455,7 @@ async function main() {
 
     handleStreamData();
     updateCurrentFileList();
-    
+
     /* ---------- end of main ---------- */
 }
 
