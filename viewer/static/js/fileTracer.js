@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         // cellColorMap is an array that stores all the blocks within the current zone as a one-dimensional array.
-        const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "white");
+        const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "");
 
 
         function getDrawPos(index1D) {
