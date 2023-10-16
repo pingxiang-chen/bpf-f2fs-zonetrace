@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         {iconType: 'file', name: 'todo.txt', size: '50KB'}
     ];
 
-    // 파일 및 폴더 항목을 생성하는 함수
+// 파일 및 폴더 항목을 생성하는 함수
     function createFileSystemItem(item) {
         // 파일 시스템 아이템을 UI에 추가합니다.
         const itemNode = d3.select('#file-system')
@@ -47,29 +47,31 @@ document.addEventListener('DOMContentLoaded', function () {
             .attr('class', 'item');
 
         // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
-        itemNode.append('i')
+        const iconNode = itemNode.append('i')
             .attr('class', `${item.iconType} icon clickable`);
 
-        const content = itemNode.append('div').attr('class', 'content');
-        const fileInfo = content.append('div')
-            .attr('class', 'file-info clickable')
-            .on('click', function (event) {
-                if (item.type === 'folder') {
-                    // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
-                    const list = d3.select(this.parentNode).select('.list');
-                    list.style('display', list.style('display') === 'none' ? 'block' : 'none');
-                } else if (item.type === TYPE_HOME) {
-                    console.log('home')
-                    updateCurrentFileList(null);
-                } else if (item.type !== TYPE_FILE) {
-                    if (!item.children) {
-                        updateCurrentFileList(item);
-                    }
-                } else if (item.type === TYPE_FILE) {
-                    console.log(item.path)
+        // 클릭 이벤트 핸들러를 아이콘에도 추가합니다.
+        iconNode.on('click', function (event) {
+            // 이 부분에 원하는 동작을 구현합니다.
+            // 예를 들어, 폴더 아이콘을 클릭했을 때의 동작을 여기에 추가할 수 있습니다.
+            // 아래는 'file-info' 요소에 추가된 이벤트 핸들러의 로직을 반복하는 예입니다.
+            if (item.type === 'folder') {
+                const list = d3.select(this.parentNode).select('.list');
+                list.style('display', list.style('display') === 'none' ? 'block' : 'none');
+            } else if (item.type === TYPE_HOME) {
+                console.log('home');
+                updateCurrentFileList(null);
+            } else if (item.type !== TYPE_FILE) {
+                if (!item.children) {
+                    updateCurrentFileList(item);
                 }
+            } else if (item.type === TYPE_FILE) {
+                console.log(item.path);
+            }
+        });
 
-            });
+        const content = itemNode.append('div').attr('class', 'content');
+        const fileInfo = content.append('div').attr('class', 'file-info clickable')
 
         fileInfo.append('div')
             .attr('class', 'header')
