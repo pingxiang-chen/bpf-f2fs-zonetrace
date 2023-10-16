@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 파일 시스템을 UI 리스트에 추가하는 함수
     function populateFileSystem(fileSystemData) {
+        d3.select('#file-system').selectAll('.item').remove();
         d3.select('#file-system').selectAll('.item')
             .data(fileSystemData)
             .enter()
