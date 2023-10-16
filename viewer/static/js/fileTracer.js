@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const zoneBitmaps = fileInfoResponse.zoneBitmaps;
         Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
             if (currentZoneId === Number(zoneNumber)) {
+                console.log(`zone ${zoneNumber} is set`)
                 currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
             }
         });
@@ -363,13 +364,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // cellColorMap is an array that stores all the blocks within the current zone as a one-dimensional array.
         const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "white");
 
-        // currentFileCellMap is a one-dimensional array that marks blocks corresponding to the currently watched file as 1.
-        let currentFileCellMap = newCurrentFileCellMap();
-
-        function newCurrentFileCellMap() {
-            return Array.from({length: maxSegmentNumber * bitmapSize}, () => 0);
-        }
-
         function getColorMapIndex(segmentNumber, bitmapIndex) {
             return segmentNumber * bitmapSize + bitmapIndex;
         }
@@ -544,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return
                 }
                 ctx.abort()
-                document.location.href = `/zone/${i}`;
+                document.location.href = `/highlight/${i}`;
             })
 
 
