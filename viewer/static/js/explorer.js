@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
         const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
         const zoneBitmaps = fileInfoResponse.zoneBitmaps;
+        console.log(zoneBitmaps)
         console.log(typeof zoneBitmaps)
         fileInfoResponse.zoneBitmaps.forEach(
             function (value, key) {
