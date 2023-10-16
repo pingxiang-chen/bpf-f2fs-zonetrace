@@ -64,215 +64,6 @@ document.currentZoneBlocks = null;
 document.addEventListener('DOMContentLoaded', function () {
 
 
-    // 파일 및 폴더 항목을 생성하는 함수
-    function createFileSystemItem(item) {
-        // 파일 시스템 아이템을 UI에 추가합니다.
-        const itemNode = d3.select('#file-system')
-            .append('div')
-            .attr('class', 'item');
-
-        // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
-        const iconNode = itemNode.append('i')
-            .attr('class', `${item.iconType} icon clickable`);
-
-        // 클릭 이벤트를 처리하는 공통 함수
-        function handleItemClick(event) {
-            // 여기에 클릭 이벤트에 대한 공통 로직을 작성합니다.
-            if (item.type === 'folder') {
-                const list = d3.select(this.parentNode).select('.list');
-                list.style('display', list.style('display') === 'none' ? 'block' : 'none');
-            } else if (item.type === TYPE_HOME) {
-                updateCurrentFileList(null);
-            } else if (item.type !== TYPE_FILE) {
-                if (!item.children) {
-                    updateCurrentFileList(item);
-                }
-            } else if (item.type === TYPE_FILE) {
-                console.log(item.path);
-                getFileInfo(item.path)
-            }
-        }
-
-        // 클릭 이벤트 리스너를 요소에 추가합니다.
-        iconNode.on('click', handleItemClick);
-
-        const content = itemNode.append('div').attr('class', 'content');
-        const fileInfo = content.append('div')
-            .attr('class', 'file-info clickable')
-            .on('click', handleItemClick);  // 같은 핸들러를 사용합니다.
-
-        fileInfo.append('div')
-            .attr('class', 'header')
-            .text(item.name);
-
-        if (item.size) {
-            fileInfo.append('div')
-                .attr('class', 'file-size')
-                .text(item.size);
-        }
-
-        if (item.type === 'folder') {
-            // 하위 폴더 및 파일 목록을 생성하고 숨깁니다.
-            var list = content.append('div').attr('class', 'list');
-            list.selectAll('.item')
-                .data(item.children)
-                .enter()
-                .append(createFileSystemItem);
-            list.style('display', 'none');
-        }
-
-        return itemNode.node();
-    }
-
-    // 파일 시스템을 UI 리스트에 추가하는 함수
-    function populateFileSystem(fileSystemData) {
-        d3.select('#file-system').selectAll('.item').remove();
-        d3.select('#file-system').selectAll('.item')
-            .data(fileSystemData)
-            .enter()
-            .append(createFileSystemItem);
-    }
-
-
-    async function updateCurrentFileList(selectedItem) {
-        let nextDirPath = ''
-        const isHome = !selectedItem
-        if (selectedItem) {
-            nextDirPath = selectedItem.path;
-        }
-
-        const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
-        const data = await response.json()
-        const files = data['files'];
-        const newFileSystem = [];
-        const root = {
-            type: TYPE_HOME,
-            iconType: ICON_HOME,
-            name: '',
-            size: '',
-            path: '',
-            parent: null,
-        };
-        newFileSystem.push(root);
-
-        if (!isHome && selectedItem && selectedItem.parent) {
-            const parent = selectedItem.parent;
-            newFileSystem.push({
-                type: parent['type'],
-                iconType: ICON_PARENT,
-                name: '..',
-                size: parent['size'],
-                path: parent['path'],
-                parent: parent.parent || null,
-            });
-        }
-
-        for (const fileInfo of files) {
-            let parent = selectedItem;
-            if (!parent) {
-                parent = root;
-            }
-            newFileSystem.push({
-                iconType: getIconType(fileInfo['type']),
-                type: fileInfo['type'],
-                name: fileInfo['name'],
-                size: fileInfo['size_str'],
-                path: fileInfo['file_path'],
-                parent: parent,
-            });
-        }
-        // 파일 시스템 채우기
-        populateFileSystem(newFileSystem);
-    }
-
-
-    /**
-     * Get the last segment from the specified URL path.
-     *
-     * This function takes a URL as an argument, splits it into segments,
-     * and returns the last non-empty segment.
-     *
-     * @param {string} url - The URL to be parsed.
-     * @returns {string} - The last non-empty segment of the URL.
-     */
-    function getLastPathSegment(url) {
-        const segments = url.split('/');
-        // Return the last segment. If the last character is '/',
-        // it will return an empty string, so return the second last segment instead
-        return segments.pop() || segments.pop();
-    }
-
-    let cellSize = 1;
-    let blocksPerLine = 0;
-    let zoomLevel = 1;
-
-    const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
-    let lastSegmentType = -2; // -2: NotChanged
-    const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
-
-
-    /**
-     * Get information for a specific zone.
-     * This function returns information about the number of zones, segments in each zone, etc.
-     *
-     * @param {string} zoneId - The number of the zone to get information for
-     * @returns {Promise<object>} - A Promise object containing an object with zone information
-     * @throws {Error} - Throws an error if getting zone information fails
-     */
-    async function getZoneInfo(zoneId) {
-        const response = await fetch(`/api/info/${zoneId}`);
-        if (!response.ok) {
-            throw new Error('Cannot get zone info');
-        }
-        return await response.json();
-    }
-
-    /**
-     * Get the label for a given segment type.
-     *
-     * @param {number} segmentType - The segment type (-2 to 5, inclusive)
-     * @returns {string} - The label for the segment type
-     */
-    function getSegmentTypeLabel(segmentType) {
-        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode, 6: Empty, 7: Filled
-        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node', 'Empty', 'Filled'][segmentType + 2];
-    }
-
-    /**
-     * Get the color for a given segment type.
-     *
-     * @param {number} segmentType - The segment type (-2 to 5, inclusive)
-     * @returns {string} - The color for the segment type
-     */
-    function getSegmentTypeColor(segmentType) {
-        if (segmentType < 0 || 7 < segmentType) return 'black';
-        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue', 'black', 'green'][segmentType];
-    }
-
-    /**
-     * Update the current zone's segment type and display it on the screen.
-     *
-     * @param {number} segmentType - The segment type to update
-     */
-    async function updateCurrentSegmentType(segmentType) {
-        if (lastSegmentType === segmentType || segmentType === -2) return;
-        lastSegmentType = segmentType;
-        curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
-    }
-
-    function getDivisors(num) {
-        const divisors = [];
-        for (let i = 1; i <= Math.sqrt(num); i++) {
-            if (num % i === 0) {
-                divisors.push(i);
-                if (num / i !== i) divisors.push(num / i);
-            }
-        }
-        // divisors.sort((a, b) => a - b);
-        return divisors;
-    }
-
-
     /**
      * Main function.
      * Performs major logic and initializes the page and data display.
@@ -356,24 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
             let yPos = Math.floor(index1D / newRowSize);
             let xPos = index1D % newRowSize;
             return [xPos * cellSize, yPos * cellSize];
-        }
-
-
-        function drawZone() {
-            Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
-                let color = "white";
-                if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
-                    console.log(`${i} is green`)
-                    color = 'green';
-                }
-                if (cellColorMap[i] === color) {
-                    return;
-                }
-                cellColorMap[i] = color;
-                const [xPos, yPos] = getDrawPos(i)
-                context.fillStyle = color;
-                context.fillRect(xPos, yPos, cellSize, cellSize);
-            })
         }
 
 
@@ -553,6 +326,23 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000)
         }
 
+        function drawZone() {
+            Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
+                let color = "white";
+                if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
+                    console.log(`${i} is green`)
+                    color = 'green';
+                }
+                if (cellColorMap[i] === color) {
+                    return;
+                }
+                cellColorMap[i] = color;
+                const [xPos, yPos] = getDrawPos(i)
+                context.fillStyle = color;
+                context.fillRect(xPos, yPos, cellSize, cellSize);
+            })
+        }
+
 
         async function getFileInfo(filePath) {
             const root = await protobuf.load("/static/zns.proto");
@@ -570,6 +360,215 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+
+
+        // 파일 및 폴더 항목을 생성하는 함수
+        function createFileSystemItem(item) {
+            // 파일 시스템 아이템을 UI에 추가합니다.
+            const itemNode = d3.select('#file-system')
+                .append('div')
+                .attr('class', 'item');
+
+            // 아이콘 유형을 폴더인지 파일인지에 따라 다르게 설정합니다.
+            const iconNode = itemNode.append('i')
+                .attr('class', `${item.iconType} icon clickable`);
+
+            // 클릭 이벤트를 처리하는 공통 함수
+            function handleItemClick(event) {
+                // 여기에 클릭 이벤트에 대한 공통 로직을 작성합니다.
+                if (item.type === 'folder') {
+                    const list = d3.select(this.parentNode).select('.list');
+                    list.style('display', list.style('display') === 'none' ? 'block' : 'none');
+                } else if (item.type === TYPE_HOME) {
+                    updateCurrentFileList(null);
+                } else if (item.type !== TYPE_FILE) {
+                    if (!item.children) {
+                        updateCurrentFileList(item);
+                    }
+                } else if (item.type === TYPE_FILE) {
+                    getFileInfo(item.path)
+                }
+            }
+
+            // 클릭 이벤트 리스너를 요소에 추가합니다.
+            iconNode.on('click', handleItemClick);
+
+            const content = itemNode.append('div').attr('class', 'content');
+            const fileInfo = content.append('div')
+                .attr('class', 'file-info clickable')
+                .on('click', handleItemClick);  // 같은 핸들러를 사용합니다.
+
+            fileInfo.append('div')
+                .attr('class', 'header')
+                .text(item.name);
+
+            if (item.size) {
+                fileInfo.append('div')
+                    .attr('class', 'file-size')
+                    .text(item.size);
+            }
+
+            if (item.type === 'folder') {
+                // 하위 폴더 및 파일 목록을 생성하고 숨깁니다.
+                var list = content.append('div').attr('class', 'list');
+                list.selectAll('.item')
+                    .data(item.children)
+                    .enter()
+                    .append(createFileSystemItem);
+                list.style('display', 'none');
+            }
+
+            return itemNode.node();
+        }
+
+        // 파일 시스템을 UI 리스트에 추가하는 함수
+        function populateFileSystem(fileSystemData) {
+            d3.select('#file-system').selectAll('.item').remove();
+            d3.select('#file-system').selectAll('.item')
+                .data(fileSystemData)
+                .enter()
+                .append(createFileSystemItem);
+        }
+
+
+        async function updateCurrentFileList(selectedItem) {
+            let nextDirPath = ''
+            const isHome = !selectedItem
+            if (selectedItem) {
+                nextDirPath = selectedItem.path;
+            }
+
+            const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
+            const data = await response.json()
+            const files = data['files'];
+            const newFileSystem = [];
+            const root = {
+                type: TYPE_HOME,
+                iconType: ICON_HOME,
+                name: '',
+                size: '',
+                path: '',
+                parent: null,
+            };
+            newFileSystem.push(root);
+
+            if (!isHome && selectedItem && selectedItem.parent) {
+                const parent = selectedItem.parent;
+                newFileSystem.push({
+                    type: parent['type'],
+                    iconType: ICON_PARENT,
+                    name: '..',
+                    size: parent['size'],
+                    path: parent['path'],
+                    parent: parent.parent || null,
+                });
+            }
+
+            for (const fileInfo of files) {
+                let parent = selectedItem;
+                if (!parent) {
+                    parent = root;
+                }
+                newFileSystem.push({
+                    iconType: getIconType(fileInfo['type']),
+                    type: fileInfo['type'],
+                    name: fileInfo['name'],
+                    size: fileInfo['size_str'],
+                    path: fileInfo['file_path'],
+                    parent: parent,
+                });
+            }
+            // 파일 시스템 채우기
+            populateFileSystem(newFileSystem);
+        }
+
+
+        /**
+         * Get the last segment from the specified URL path.
+         *
+         * This function takes a URL as an argument, splits it into segments,
+         * and returns the last non-empty segment.
+         *
+         * @param {string} url - The URL to be parsed.
+         * @returns {string} - The last non-empty segment of the URL.
+         */
+        function getLastPathSegment(url) {
+            const segments = url.split('/');
+            // Return the last segment. If the last character is '/',
+            // it will return an empty string, so return the second last segment instead
+            return segments.pop() || segments.pop();
+        }
+
+        let cellSize = 1;
+        let blocksPerLine = 0;
+        let zoomLevel = 1;
+
+        const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
+        let lastSegmentType = -2; // -2: NotChanged
+        const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
+
+
+        /**
+         * Get information for a specific zone.
+         * This function returns information about the number of zones, segments in each zone, etc.
+         *
+         * @param {string} zoneId - The number of the zone to get information for
+         * @returns {Promise<object>} - A Promise object containing an object with zone information
+         * @throws {Error} - Throws an error if getting zone information fails
+         */
+        async function getZoneInfo(zoneId) {
+            const response = await fetch(`/api/info/${zoneId}`);
+            if (!response.ok) {
+                throw new Error('Cannot get zone info');
+            }
+            return await response.json();
+        }
+
+        /**
+         * Get the label for a given segment type.
+         *
+         * @param {number} segmentType - The segment type (-2 to 5, inclusive)
+         * @returns {string} - The label for the segment type
+         */
+        function getSegmentTypeLabel(segmentType) {
+            // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode, 6: Empty, 7: Filled
+            return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node', 'Empty', 'Filled'][segmentType + 2];
+        }
+
+        /**
+         * Get the color for a given segment type.
+         *
+         * @param {number} segmentType - The segment type (-2 to 5, inclusive)
+         * @returns {string} - The color for the segment type
+         */
+        function getSegmentTypeColor(segmentType) {
+            if (segmentType < 0 || 7 < segmentType) return 'black';
+            return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue', 'black', 'green'][segmentType];
+        }
+
+        /**
+         * Update the current zone's segment type and display it on the screen.
+         *
+         * @param {number} segmentType - The segment type to update
+         */
+        async function updateCurrentSegmentType(segmentType) {
+            if (lastSegmentType === segmentType || segmentType === -2) return;
+            lastSegmentType = segmentType;
+            curSegTypeSpan.innerText = getSegmentTypeLabel(segmentType);
+        }
+
+        function getDivisors(num) {
+            const divisors = [];
+            for (let i = 1; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) {
+                    divisors.push(i);
+                    if (num / i !== i) divisors.push(num / i);
+                }
+            }
+            // divisors.sort((a, b) => a - b);
+            return divisors;
+        }
+
 
         drawZone();
         updateCurrentFileList(null);
