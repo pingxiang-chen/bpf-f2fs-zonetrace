@@ -115,8 +115,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 type: prevDir['type'],
                 iconType: 'arrow left',
                 name: prevDir['name'],
-                size: prevDir['size_str'],
-                path: prevDir['file_path'],
+                size: prevDir['size'],
+                path: prevDir['path'],
             });
         } else {
             fileSystem.length = 0; // clear fileSystem
