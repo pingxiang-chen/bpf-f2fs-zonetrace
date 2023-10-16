@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/dustin/go-humanize"
 )
 
 func ListFiles(dirPath string) ([]FileInfo, error) {
@@ -27,7 +29,7 @@ func ListFiles(dirPath string) ([]FileInfo, error) {
 	for _, entry := range entries {
 		sizeStr := ""
 		if !entry.IsDir() {
-			sizeStr = fmt.Sprintf("%d", entry.Size()) // 파일 크기를 문자열로 변환
+			sizeStr = humanize.Bytes(uint64(entry.Size())) // 파일 크기를 문자열로 변환
 		}
 
 		fileInfo := FileInfo{
