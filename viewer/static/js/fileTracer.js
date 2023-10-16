@@ -371,7 +371,6 @@ document.addEventListener('DOMContentLoaded', function () {
             Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
                 let color = "white";
                 if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(i)) {
-                    console.log(`${i} is green`)
                     color = 'green';
                 }
                 if (cellColorMap[i] === color) {
@@ -393,13 +392,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
             const zoneBitmaps = fileInfoResponse.zoneBitmaps;
             console.log(fileInfoResponse)
-            Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
-                updateZoneSegmentType(Number(zoneNumber), 7)
-                if (currentZoneId === Number(zoneNumber)) {
+            let isCurrentZoneExist = false;
+            for (let zoneNo of Object.keys(zoneBitmaps)) {
+                const zoneIndex = Number(zoneNo);
+                updateZoneSegmentType(zoneIndex, 7)
+                if (currentZoneId === zoneIndex) {
+                    isCurrentZoneExist = true;
                     document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
                     drawZone();
                 }
-            });
+            }
+            if (!isCurrentZoneExist) {
+                document.currentZoneBlocks = null;
+                drawZone();
+            }
         }
 
 
@@ -451,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (item.type === 'folder') {
                 // 하위 폴더 및 파일 목록을 생성하고 숨깁니다.
-                var list = content.append('div').attr('class', 'list');
+                const list = content.append('div').attr('class', 'list');
                 list.selectAll('.item')
                     .data(item.children)
                     .enter()
