@@ -8,6 +8,7 @@ const (
 	ParentPath
 	FilePath
 	DirectoryPath
+	HomePath
 )
 
 type MountInfo struct {

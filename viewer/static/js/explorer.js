@@ -3,18 +3,19 @@ const TYPE_ROOT = 1
 const TYPE_PARENT = 2
 const TYPE_FILE = 3
 const TYPE_DIRECTORY = 4
-
+const TYPE_HOME = 5
 
 const ICON_UNKNOWN = 'question circle'
 const ICON_ROOT = 'disk'
 const ICON_PARENT = 'arrow left'
 const ICON_FILE = 'file'
 const ICON_DIRECTORY = 'folder'
+const ICON_HOME = 'home'
 
 document.addEventListener('DOMContentLoaded', function () {
 
     function getIconType(pathType) {
-        return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY][pathType]
+        return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
     }
 
     // 예시 파일 시스템 데이터
@@ -102,28 +103,37 @@ document.addEventListener('DOMContentLoaded', function () {
     async function updateCurrentFileList(newPathItem) {
         console.log('newPathItem', newPathItem)
         let nextDirPath = ''
-        if (newPathItem && newPathItem.type !== TYPE_ROOT) {
+        if (newPathItem) {
             nextDirPath = newPathItem.path;
         }
+        const prevDir = newPathItem
+        const isHome = nextDirPath === '';
+
         const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
         const data = await response.json()
         const files = data['files'];
-        if (newPathItem) {
-            const prevDir = newPathItem
-            fileSystem.length = 0; // clear fileSystem
-            fileSystem.push({
+        const newFileSystem = [];
+        if (!isHome) {
+            newFileSystem.push({
+                type: TYPE_HOME,
+                iconType: ICON_HOME,
+                name: '',
+                size: '',
+                path: '',
+            });
+        }
+        if (prevDir) {
+            newFileSystem.push({
                 type: prevDir['type'],
-                iconType: 'arrow left',
+                iconType: ICON_PARENT,
                 name: prevDir['name'],
                 size: prevDir['size'],
                 path: prevDir['path'],
             });
-        } else {
-            fileSystem.length = 0; // clear fileSystem
         }
 
         for (const fileInfo of files) {
-            fileSystem.push({
+            newFileSystem.push({
                 iconType: getIconType(fileInfo['type']),
                 type: fileInfo['type'],
                 name: fileInfo['name'],
@@ -132,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         // 파일 시스템 채우기
-        populateFileSystem(fileSystem);
+        populateFileSystem(newFileSystem);
     }
 
     updateCurrentFileList('');
