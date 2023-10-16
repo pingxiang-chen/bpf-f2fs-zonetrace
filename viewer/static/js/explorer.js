@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function updateCurrentFileList(newPathItem) {
+        console.log('newPathItem', newPathItem)
         let nextDirPath = ''
         if (newPathItem) {
             nextDirPath = newPathItem.path;
