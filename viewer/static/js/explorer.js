@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } else if (item.type === TYPE_FILE) {
                 console.log(item.path);
+                getFileInfo(item.path)
             }
         }
 
@@ -105,6 +106,17 @@ document.addEventListener('DOMContentLoaded', function () {
             .data(fileSystemData)
             .enter()
             .append(createFileSystemItem);
+    }
+
+
+    async function getFileInfo(filePath) {
+        const root = await protobuf.load("/static/zns.proto");
+        const FileInfoResponse = root.lookupType('FileInfoResponse');
+        const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
+        const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
+        const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
+        console.log(fileInfoResponse);
+        return fileInfoResponse;  // Now fileInfoResponse is a deserialized object of type FileInfoResponse
     }
 
     async function updateCurrentFileList(selectedItem) {
