@@ -25,18 +25,17 @@ func ListFiles(dirPath string) ([]FileInfo, error) {
 
 	// 각 항목에 대해 정보 수집
 	for _, entry := range entries {
-		// depth가 1이므로 하위 디렉터리는 무시합니다.
-		if entry.IsDir() {
-			continue
+		sizeStr := ""
+		if !entry.IsDir() {
+			sizeStr = fmt.Sprintf("%d", entry.Size()) // 파일 크기를 문자열로 변환
 		}
 
 		fileInfo := FileInfo{
 			FilePath: filepath.Join(dirPath, entry.Name()),
 			Name:     entry.Name(),
 			Type:     getType(entry),
-			SizeStr:  fmt.Sprintf("%d", entry.Size()), // 파일 크기를 문자열로 변환
+			SizeStr:  sizeStr,
 		}
-
 		result = append(result, fileInfo)
 	}
 	return result, nil
