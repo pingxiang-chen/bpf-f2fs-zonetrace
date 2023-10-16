@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 } else if (item.type === TYPE_HOME) {
+                    console.log('home')
                     updateCurrentFileList(null);
                 } else if (item.type !== TYPE_FILE) {
                     if (!item.children) {
