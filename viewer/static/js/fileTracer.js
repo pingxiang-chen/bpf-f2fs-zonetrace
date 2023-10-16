@@ -63,6 +63,47 @@ document.currentZoneBlocks = null;
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    /**
+     * Get the last segment from the specified URL path.
+     *
+     * This function takes a URL as an argument, splits it into segments,
+     * and returns the last non-empty segment.
+     *
+     * @param {string} url - The URL to be parsed.
+     * @returns {string} - The last non-empty segment of the URL.
+     */
+    function getLastPathSegment(url) {
+        const segments = url.split('/');
+        // Return the last segment. If the last character is '/',
+        // it will return an empty string, so return the second last segment instead
+        return segments.pop() || segments.pop();
+    }
+
+    let cellSize = 1;
+    let blocksPerLine = 0;
+    let zoomLevel = 1;
+
+    const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
+    let lastSegmentType = -2; // -2: NotChanged
+    const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
+
+
+    /**
+     * Get information for a specific zone.
+     * This function returns information about the number of zones, segments in each zone, etc.
+     *
+     * @param {string} zoneId - The number of the zone to get information for
+     * @returns {Promise<object>} - A Promise object containing an object with zone information
+     * @throws {Error} - Throws an error if getting zone information fails
+     */
+    async function getZoneInfo(zoneId) {
+        const response = await fetch(`/api/info/${zoneId}`);
+        if (!response.ok) {
+            throw new Error('Cannot get zone info');
+        }
+        return await response.json();
+    }
+
 
     /**
      * Main function.
@@ -482,47 +523,6 @@ document.addEventListener('DOMContentLoaded', function () {
             populateFileSystem(newFileSystem);
         }
 
-
-        /**
-         * Get the last segment from the specified URL path.
-         *
-         * This function takes a URL as an argument, splits it into segments,
-         * and returns the last non-empty segment.
-         *
-         * @param {string} url - The URL to be parsed.
-         * @returns {string} - The last non-empty segment of the URL.
-         */
-        function getLastPathSegment(url) {
-            const segments = url.split('/');
-            // Return the last segment. If the last character is '/',
-            // it will return an empty string, so return the second last segment instead
-            return segments.pop() || segments.pop();
-        }
-
-        let cellSize = 1;
-        let blocksPerLine = 0;
-        let zoomLevel = 1;
-
-        const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // Retrieves the number corresponding to :num in the URL `/zone/:num`
-        let lastSegmentType = -2; // -2: NotChanged
-        const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
-
-
-        /**
-         * Get information for a specific zone.
-         * This function returns information about the number of zones, segments in each zone, etc.
-         *
-         * @param {string} zoneId - The number of the zone to get information for
-         * @returns {Promise<object>} - A Promise object containing an object with zone information
-         * @throws {Error} - Throws an error if getting zone information fails
-         */
-        async function getZoneInfo(zoneId) {
-            const response = await fetch(`/api/info/${zoneId}`);
-            if (!response.ok) {
-                throw new Error('Cannot get zone info');
-            }
-            return await response.json();
-        }
 
         /**
          * Get the label for a given segment type.
