@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`/api/files?dirPath=${dirPath}`);
         const data = await response.json()
         fileSystem.length = 0; // clear fileSystem
+        console.log(data)
         for (const fileInfo of data['files']) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
@@ -102,10 +103,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 size: fileInfo['size_str'],
             });
         }
+        // 파일 시스템 채우기
+        populateFileSystem(fileSystem);
     }
 
     updateCurrentFileList(currentPath);
-
-    // 페이지 로드 시 파일 시스템 채우기
-    populateFileSystem(fileSystem);
+    
 });
