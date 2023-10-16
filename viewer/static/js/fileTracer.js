@@ -22,7 +22,6 @@ const currentZoneId = Number(getLastPathSegment(document.location.pathname)) // 
 let lastSegmentType = -2; // -2: NotChanged
 const curSegTypeSpan = document.getElementById('curSegType') // Span element to display the current zone's segment type
 
-let currentPath = "";
 
 /**
  * Get information for a specific zone.
@@ -390,12 +389,6 @@ async function main() {
     }
 
 
-    async function updateCurrentFileList() {
-        const response = await fetch(`api/files?dirPath=${currentZoneId}`);
-        console.log(response);
-    }
-
-
     /**
      * Connect to the server and receive zone updates in real-time,
      * triggering various events accordingly.
@@ -454,7 +447,6 @@ async function main() {
     }
 
     handleStreamData();
-    updateCurrentFileList();
 
     /* ---------- end of main ---------- */
 }

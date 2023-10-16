@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    let currentPath = "";
+
     // 예시 파일 시스템 데이터
     const fileSystem = [
         {type: 'arrow left', name: '..'},
@@ -72,6 +74,13 @@ document.addEventListener('DOMContentLoaded', function () {
             .enter()
             .append(createFileSystemItem);
     }
+
+    async function updateCurrentFileList() {
+        const response = await fetch(`api/files?dirPath=${currentZoneId}`);
+        console.log(response);
+    }
+
+    updateCurrentFileList();
 
     // 페이지 로드 시 파일 시스템 채우기
     populateFileSystem();

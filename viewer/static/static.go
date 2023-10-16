@@ -21,6 +21,13 @@ var HighlightHtmlFile []byte
 //go:embed js/tracer.js
 var tracerJsFile []byte
 
+// fileTracerJsFile reads the `js/fileTracer.js` file and stores its bytes.
+//
+//go:embed js/fileTracer.js
+var fileTracerJsFile []byte
+
+// explorerJsFile reads the `js/explorer.js` file and stores its bytes.
+//
 //go:embed js/explorer.js
 var explorerJsFile []byte
 
@@ -36,6 +43,10 @@ var ServingFileMap = map[string]ServingFile{
 	},
 	"js/tracer.js": {
 		File:        tracerJsFile,
+		ContentType: "text/javascript",
+	},
+	"js/fileTracer.js": {
+		File:        fileTracerJsFile,
 		ContentType: "text/javascript",
 	},
 	"js/explorer.js": {
