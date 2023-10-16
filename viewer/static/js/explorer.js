@@ -98,9 +98,10 @@ document.addEventListener('DOMContentLoaded', function () {
     async function updateCurrentFileList(newDirPath) {
         const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
+        const files = data['files'];
         if (previousPath === "") {
             // find previous directory
-            const prevDir = data.find((item) => item.file_path === previousPath);
+            const prevDir = files.find((item) => item.file_path === previousPath);
             fileSystem.length = 0; // clear fileSystem
             fileSystem.push({
                 iconType: 'arrow left',
@@ -112,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fileSystem.length = 0; // clear fileSystem
         }
 
-        for (const fileInfo of data['files']) {
+        for (const fileInfo of files) {
             fileSystem.push({
                 iconType: getIconType(fileInfo['type']),
                 name: fileInfo['name'],
