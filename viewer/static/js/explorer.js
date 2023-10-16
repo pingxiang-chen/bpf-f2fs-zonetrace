@@ -110,11 +110,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function updateCurrentFileList(selectedItem) {
         let nextDirPath = ''
-        let prevDir;
         const isHome = !selectedItem
         if (selectedItem) {
             nextDirPath = selectedItem.path;
-            prevDir = selectedItem.parent;
         }
 
         const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
@@ -130,13 +128,13 @@ document.addEventListener('DOMContentLoaded', function () {
             parent: null,
         });
 
-        if (!isHome && prevDir) {
+        if (!isHome && selectedItem) {
             newFileSystem.push({
-                type: prevDir['type'],
+                type: selectedItem['type'],
                 iconType: ICON_PARENT,
                 name: '..',
-                size: prevDir['size'],
-                path: prevDir['path'],
+                size: selectedItem['size'],
+                path: selectedItem['path'],
             });
         }
 
