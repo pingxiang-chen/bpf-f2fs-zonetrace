@@ -298,6 +298,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCurrentSegmentType(info.last_segment_type);
         const bitmapSize = info.block_per_segment;
         const maxSegmentNumber = info.total_segment_per_zone;
+        const totalBlocksPerZone = bitmapSize * maxSegmentNumber;
 
         // set blocksPerLineInput
         const blocksPerLineInput = document.getElementById('blocksPerLineInput');
@@ -390,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 const colorIndex = getColorMapIndex(y, i);
                 if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
+                    console.log(`${colorIndex} is green`)
                     color = 'green';
                 }
                 if (cellColorMap[colorIndex] === color) {
@@ -579,65 +581,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000)
         }
 
-
-        /**
-         * Connect to the server and receive zone updates in real-time,
-         * triggering various events accordingly.
-         */
-        async function handleStreamData() {
-            // Decode data from the server as protobuf.
-            const root = await protobuf.load("/static/zns.proto");
-            const ZoneResponse = root.lookupType('ZoneResponse');
-
-            const response = await fetch(`/api/zone/${currentZoneId}`, {signal});
-            const reader = response.body.getReader();
-
-            let buf = [];
-            while (true) {
-                const {done, value} = await reader.read();
-                if (done) {
-                    break;
-                }
-                buf = buf.concat(Array.from(value));
-                while (true) {
-                    const r = protobuf.Reader.create(buf)
-                    let zone;
-                    try {
-                        zone = ZoneResponse.decodeDelimited(r);
-                    } catch (e) {
-                        break;
-                    }
-                    buf = buf.slice(r.pos);
-
-                    // Perform zone updates with data decoded using protobuf
-                    if (zone.lastSegmentType !== -2) { // -2: NotChanged
-                        updateZoneSegmentType(zone.zoneNo, zone.lastSegmentType);
-                    }
-                    if (!zone.segments || zone.segments.length === 0) {
-                        continue;
-                    }
-                    // Draw with the bitmap data of each segment
-                    zone.segments.forEach((segment, _) => {
-                        let segmentBitmap = [];
-                        if (segment.map) {
-                            for (let b of Object.values(segment.map)) {
-                                for (let i = 0; i < 8; i++) {
-                                    segmentBitmap.push((b >> i) & 1);
-                                }
-                            }
-                        } else {
-                            segmentBitmap = Array.from({length: info.block_per_segment}, () => -1);
-                        }
-                        const ping = Date.now() - zone.time;
-                        // console.log(`received ${segment.segmentNo}, ping: ${ping}ms`)
-                        drawChart(segmentBitmap, segment.segmentNo, segment.segmentType);
-                    })
-                }
-            }
-            // Stream ended
-        }
-
-        handleStreamData();
         updateCurrentFileList(null);
 
         /* ---------- end of main ---------- */
