@@ -55,11 +55,11 @@ document.addEventListener('DOMContentLoaded', function () {
             .on('click', function (event) {
                 if (item.type === 'folder') {
                     // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
-                    var list = d3.select(this.parentNode).select('.list');
+                    const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 }
                 if (!item.children) {
-                    updateCurrentFileList(previousPath);
+                    updateCurrentFileList(item.path);
                 }
             });
 
