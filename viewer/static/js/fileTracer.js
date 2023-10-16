@@ -133,21 +133,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
-    async function getFileInfo(filePath) {
-        const root = await protobuf.load("/static/zns.proto");
-        const FileInfoResponse = root.lookupType('FileInfoResponse');
-        const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
-        const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
-        const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
-        const zoneBitmaps = fileInfoResponse.zoneBitmaps;
-        console.log(fileInfoResponse)
-        Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
-            if (currentZoneId === Number(zoneNumber)) {
-                console.log(`zone ${zoneNumber} is set`)
-                document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
-            }
-        });
-    }
 
     async function updateCurrentFileList(selectedItem) {
         let nextDirPath = ''
@@ -249,8 +234,8 @@ document.addEventListener('DOMContentLoaded', function () {
      * @returns {string} - The label for the segment type
      */
     function getSegmentTypeLabel(segmentType) {
-        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode, 6: Empty
-        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node', 'Empty'][segmentType + 2];
+        // -2: NotChanged, -1: Unknown, 0: HotData, 1: WarmData, 2: ColdData, 3: HotNode, 4: WarmNode, 5: ColdNode, 6: Empty, 7: Filled
+        return ['NotChanged', 'Unknown', 'Hot Data', 'Warm Data', 'Cold Data', 'Hot Node', 'Warm Node', 'Cold Node', 'Empty', 'Filled'][segmentType + 2];
     }
 
     /**
@@ -260,8 +245,8 @@ document.addEventListener('DOMContentLoaded', function () {
      * @returns {string} - The color for the segment type
      */
     function getSegmentTypeColor(segmentType) {
-        if (segmentType < 0 || 6 < segmentType) return 'black';
-        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue', 'black'][segmentType];
+        if (segmentType < 0 || 7 < segmentType) return 'black';
+        return ['red', 'yellow', 'blue', 'pink', 'orange', 'skyblue', 'black', 'green'][segmentType];
     }
 
     /**
@@ -366,43 +351,29 @@ document.addEventListener('DOMContentLoaded', function () {
             return segmentNumber * bitmapSize + bitmapIndex;
         }
 
-        function getDrawPos(segmentNumber, bitmapIndex) {
-            let index1D = segmentNumber * bitmapSize + bitmapIndex;
+        function getDrawPos(index1D) {
             let newRowSize = bitmapSize / zoomLevel;
             let yPos = Math.floor(index1D / newRowSize);
             let xPos = index1D % newRowSize;
             return [xPos * cellSize, yPos * cellSize];
         }
 
-        /**
-         * Draw a segment's information on the canvas.
-         *
-         * @param {number[]} row - Bitmap array of the segment
-         * @param {number} y - Y coordinate position on the canvas where the segment is drawn
-         * @param {number} segmentType - The segment's type represented by a number
-         */
-        function drawChart(row, y, segmentType) {
-            row.forEach((d, i) => {
+
+        function drawZone() {
+            Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
                 let color = "white";
-                if (d === 1) {
-                    color = getSegmentTypeColor(segmentType);
-                } else if (d === -1) {
-                    color = "white";
-                }
-                const colorIndex = getColorMapIndex(y, i);
-                console.log(colorIndex)
                 if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
-                    console.log(`${colorIndex} is green`)
+                    console.log(`${i} is green`)
                     color = 'green';
                 }
-                if (cellColorMap[colorIndex] === color) {
+                if (cellColorMap[i] === color) {
                     return;
                 }
-                cellColorMap[colorIndex] = color;
-                const [xPos, yPos] = getDrawPos(y, i)
+                cellColorMap[i] = color;
+                const [xPos, yPos] = getDrawPos(i)
                 context.fillStyle = color;
                 context.fillRect(xPos, yPos, cellSize, cellSize);
-            });
+            })
         }
 
 
@@ -582,6 +553,25 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000)
         }
 
+
+        async function getFileInfo(filePath) {
+            const root = await protobuf.load("/static/zns.proto");
+            const FileInfoResponse = root.lookupType('FileInfoResponse');
+            const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
+            const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
+            const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
+            const zoneBitmaps = fileInfoResponse.zoneBitmaps;
+            console.log(fileInfoResponse)
+            Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
+                updateZoneSegmentType(Number(zoneNumber), 7)
+                if (currentZoneId === Number(zoneNumber)) {
+                    document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
+                    drawZone();
+                }
+            });
+        }
+
+        drawZone();
         updateCurrentFileList(null);
 
         /* ---------- end of main ---------- */
