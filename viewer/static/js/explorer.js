@@ -1,5 +1,6 @@
+let previousPath = "";
+
 document.addEventListener('DOMContentLoaded', function () {
-    let previousPath = "";
 
     function getIconType(pathType) {
         switch (pathType) {
@@ -97,15 +98,16 @@ document.addEventListener('DOMContentLoaded', function () {
             .append(createFileSystemItem);
     }
 
-    async function updateCurrentFileList(newDirPath) {
+    async function updateCurrentFileList(newPathItem) {
+        let newDirPath = ''
+        if (newDirPath) {
+            newDirPath = newPathItem.path;
+        }
         const response = await fetch(`/api/files?dirPath=${newDirPath}`);
         const data = await response.json()
         const files = data['files'];
-        console.log('previousPath', previousPath);
-        if (previousPath !== '') {
-            // find previous directory
-            const prevDir = files.find((item) => item.file_path === previousPath);
-            console.log('prevDir', prevDir);
+        if (newPathItem) {
+            const prevDir = newPathItem
             fileSystem.length = 0; // clear fileSystem
             fileSystem.push({
                 iconType: 'arrow left',
@@ -125,12 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 path: fileInfo['file_path'],
             });
         }
-        console.log(`previousPath: ${previousPath} = newDirPath: ${newDirPath}`);
-        previousPath = newDirPath;
         // 파일 시스템 채우기
         populateFileSystem(fileSystem);
     }
 
-    updateCurrentFileList(previousPath);
+    updateCurrentFileList('');
 
 });
