@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -44,18 +43,6 @@ func main() {
 	zoneInfo, err := receiver.ReadZoneInfo(stdioReader)
 	if err != nil {
 		panic(fmt.Errorf("readZoneInfo: %w", err))
-	}
-	b, _ := json.Marshal(zoneInfo)
-	fmt.Println(string(b))
-
-	fileInfo, err := znsmemory.GetFileInfo(zoneInfo, "/mnt/f2fs/target_file.png")
-	if err != nil {
-		fmt.Printf("GetFileInfo: %s\n", err)
-	}
-	b, _ = json.Marshal(fileInfo)
-	fmt.Println(string(b))
-	for i, segment := range fileInfo.FileSegments {
-		fmt.Printf("Segment %d: ZoneIndex: %d, SegmentIndex: %d, ValidMap: %v\n", i, segment.ZoneIndex, segment.SegmentIndex, segment.ValidMap)
 	}
 
 	// Open the procFile for reading to read F2FS segment bits information.
