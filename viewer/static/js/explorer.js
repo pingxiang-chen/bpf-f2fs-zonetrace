@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const fileInfo = content.append('div')
             .attr('class', 'file-info clickable')
             .on('click', function (event) {
+                console.log(event)
                 if (item.type === 'folder') {
                     // 폴더를 클릭할 때 하위 목록의 표시 여부를 전환합니다.
                     var list = d3.select(this.parentNode).select('.list');
@@ -108,5 +109,5 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     updateCurrentFileList(currentPath);
-    
+
 });
