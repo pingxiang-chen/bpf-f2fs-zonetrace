@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function drawZone() {
             Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
                 let color = "white";
-                if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
+                if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(i)) {
                     console.log(`${i} is green`)
                     color = 'green';
                 }
