@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 path: fileInfo['file_path'],
             });
         }
+        console.log(`previousPath: ${previousPath} = newDirPath: ${newDirPath}`);
         previousPath = newDirPath;
         // 파일 시스템 채우기
         populateFileSystem(fileSystem);
