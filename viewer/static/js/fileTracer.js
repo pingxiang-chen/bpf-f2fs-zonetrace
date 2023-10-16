@@ -353,6 +353,12 @@ document.addEventListener('DOMContentLoaded', function () {
             cell.style("fill", color)
         }
 
+        async function resetZoneSegmentType() {
+            for (let i = 0; i < zoneTotalSize; i++) {
+                updateZoneSegmentType(i, -1)
+            }
+        }
+
         function drawZone() {
             Array.from({length: totalBlocksPerZone}, (_, i) => i).forEach((i) => {
                 let color = "white";
@@ -377,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const responseData = await response.arrayBuffer();  // Convert response to ArrayBuffer
             const fileInfoResponse = FileInfoResponse.decode(new Uint8Array(responseData));  // Deserialize
             const zoneBitmaps = fileInfoResponse.zoneBitmaps;
-            console.log(fileInfoResponse)
+            await resetZoneSegmentType();
             let isCurrentZoneExist = false;
             for (let zoneNo of Object.keys(zoneBitmaps)) {
                 const zoneIndex = Number(zoneNo);
