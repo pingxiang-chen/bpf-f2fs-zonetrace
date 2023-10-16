@@ -60,21 +60,10 @@ class Blocks {
 
 let currentZoneBlocks;
 
-let onChangeBlockSize = () => {
-    // it will be re-declared later
-}
-
-let reDrawCanvas = async () => {
-    // it will be re-declared later
-};
-
-const onChangeCellSize = () => {
-    cellSize = Number(document.getElementById('cellSizeInput').value);
-    reDrawCanvas();
-}
-
 
 document.addEventListener('DOMContentLoaded', function () {
+
+
     // 파일 및 폴더 항목을 생성하는 함수
     function createFileSystemItem(item) {
         // 파일 시스템 아이템을 UI에 추가합니다.
@@ -315,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function () {
         blocksPerLineInput.value = bitmapSize;
         blocksPerLineInput.setAttribute("max", bitmapSize);
         const blockDivisors = getDivisors(bitmapSize);
-        onChangeBlockSize = () => {
+        let onChangeBlockSize = () => {
             const currentValue = Number(blocksPerLineInput.value);
             const isIncreased = blocksPerLine < currentValue;
             let next;
@@ -329,6 +318,8 @@ document.addEventListener('DOMContentLoaded', function () {
             zoomLevel = bitmapSize / blocksPerLine;
             reDrawCanvas();
         }
+
+        blocksPerLineInput.addEventListener('change', onChangeBlockSize);
 
         /* ---------- Draw the canvas representing zone's blocks ---------- */
 
@@ -358,6 +349,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 context.fillRect(xPos, yPos, cellSize, cellSize);
             })
         }
+
+        const onChangeCellSize = () => {
+            cellSize = Number(document.getElementById('cellSizeInput').value);
+            reDrawCanvas();
+        }
+        document.getElementById('cellSizeInput').addEventListener('change', onChangeCellSize);
+
 
         // cellColorMap is an array that stores all the blocks within the current zone as a one-dimensional array.
         const cellColorMap = Array.from({length: maxSegmentNumber * bitmapSize}, () => "white");
