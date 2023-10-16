@@ -58,7 +58,7 @@ class Blocks {
     }
 }
 
-let currentZoneBlocks;
+document.currentZoneBlocks = null;
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.keys(zoneBitmaps).forEach(function (zoneNumber) {
             if (currentZoneId === Number(zoneNumber)) {
                 console.log(`zone ${zoneNumber} is set`)
-                currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
+                document.currentZoneBlocks = new Blocks(zoneBitmaps[zoneNumber])
             }
         });
     }
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     color = "white";
                 }
                 const colorIndex = getColorMapIndex(y, i);
-                if (currentZoneBlocks && currentZoneBlocks.isBitSet(colorIndex)) {
+                if (document.currentZoneBlocks && document.currentZoneBlocks.isBitSet(colorIndex)) {
                     color = 'green';
                 }
                 if (cellColorMap[colorIndex] === color) {
