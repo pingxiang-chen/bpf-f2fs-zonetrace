@@ -90,10 +90,8 @@ document.addEventListener('DOMContentLoaded', function () {
         cellSize = Number(document.getElementById('cellSizeInput').value);
         reDrawCanvas();
     }
+    document.getElementById('cellSizeInput').addEventListener('change', onChangeCellSize);
 
-    let onChangeBlockSize = () => {
-        // it will be re-declared later
-    }
 
     let reDrawCanvas = async () => {
         // it will be re-declared later
@@ -130,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             zoomLevel = bitmapSize / blocksPerLine;
             reDrawCanvas();
         }
+        blocksPerLineInput.addEventListener('change', onChangeBlockSize);
 
         /* ---------- Draw the canvas representing zone's blocks ---------- */
 
