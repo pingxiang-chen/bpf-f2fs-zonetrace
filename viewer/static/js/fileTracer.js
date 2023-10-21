@@ -33,6 +33,21 @@ function addQueryParam(key, value) {
 }
 
 /**
+ * Removes all query parameters from the current URL without reloading the page.
+ * The browser's address bar reflects the new URL, which will not contain any query parameters.
+ */
+function cleanQueryParams() {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Remove all query parameters
+    url.search = new URLSearchParams();
+
+    // Update the browser's history state without reloading the page
+    window.history.pushState({path: url.href}, '', url.href);
+}
+
+/**
  * Parses the current URL's query parameters and returns them as an object.
  * Each key-value pair in the query parameters becomes a property in the resulting object.
  *
@@ -520,6 +535,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 } else if (item.type === TYPE_HOME) {
+                    cleanQueryParams();
                     updateCurrentFileList('');
                 } else if (item.type !== TYPE_FILE) {
                     addQueryParam("path", item.path);
