@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/calc"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/respbuffer"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/static"
@@ -376,13 +377,24 @@ func (s *api) getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
 	maxHistogramSector := znsInfo.MaxSectors / 4096
 	maxHistogramSectorKey := fmt.Sprintf("<%d", maxHistogramSector)
 	histogram := make(map[string]int)
+	maxKey := 0
 	for _, fibmap := range fileInfo.Fibmaps {
 		if fibmap.Blks > maxHistogramSector {
+			maxKey = maxHistogramSector
 			histogram[maxHistogramSectorKey] = histogram[maxHistogramSectorKey] + 1
 			continue
 		}
+		if fibmap.Blks > maxKey {
+			maxKey = fibmap.Blks
+		}
 		k := strconv.Itoa(fibmap.Blks)
 		histogram[k] = histogram[k] + 1
+	}
+	for _, n := range calc.GeneratePowersOfTwo(1, maxKey) {
+		k := strconv.Itoa(n)
+		if _, ok := histogram[k]; !ok {
+			histogram[k] = 0
+		}
 	}
 
 	response := &FileInfoResponse{
