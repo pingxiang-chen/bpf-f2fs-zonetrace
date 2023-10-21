@@ -595,16 +595,29 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             newFileSystem.push(root);
 
-            if (!isHome && selectedItem && selectedItem.parent) {
-                const parent = selectedItem.parent;
-                newFileSystem.push({
-                    type: parent['type'],
-                    iconType: ICON_PARENT,
-                    name: '..',
-                    size: parent['size'],
-                    path: parent['path'],
-                    parent: parent.parent || null,
-                });
+            if (!isHome) {
+                if (data.current_dirs.length === 0) {
+                    // parent is home
+                    newFileSystem.push({
+                        type: TYPE_ROOT,
+                        iconType: ICON_PARENT,
+                        name: '..',
+                        size: '',
+                        path: '',
+                        parent: null,
+                    });
+                } else {
+                    // parent is previous directory
+                    const parentPath = data.current_dirs[data.current_dirs.length - 1];
+                    newFileSystem.push({
+                        type: TYPE_PARENT,
+                        iconType: ICON_PARENT,
+                        name: '..',
+                        size: '',
+                        path: parentPath,
+                        parent: null,
+                    });
+                }
             }
 
             for (const fileInfo of files) {
@@ -671,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return divisors;
         }
 
-        function makeItemFromCurrentQueryParams(){
+        function makeItemFromCurrentQueryParams() {
             const params = getQueryParams()
         }
 
