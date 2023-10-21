@@ -423,6 +423,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .attr("y", 30) // Position the text slightly below the x-axis
                 .attr("fill", "black") // Choose a fill color for the text
                 .attr("text-anchor", "middle") // Center the text
+                .attr("font-size", "14px") // Specify the font size
                 .text("# of blocks"); // Specify the text for the label
 
             const y = d3.scaleLinear()
