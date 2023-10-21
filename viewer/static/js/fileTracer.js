@@ -606,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         iconType: ICON_PARENT,
                         name: '..',
                         size: '',
-                        path: dirPath,
+                        path: data.parent_dir_path,
                     });
                 }
             }
