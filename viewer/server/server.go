@@ -373,9 +373,16 @@ func (s *api) getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
 		// If the segment is empty, we leave the pre-filled zeros in place.
 	}
 
-	histogram := make(map[int]int)
+	maxHistogramSector := znsInfo.MaxSectors / 4096
+	maxHistogramSectorKey := fmt.Sprintf("<%d", maxHistogramSector)
+	histogram := make(map[string]int)
 	for _, fibmap := range fileInfo.Fibmaps {
-		histogram[fibmap.Blks] = histogram[fibmap.Blks] + 1
+		if fibmap.Blks > maxHistogramSector {
+			histogram[maxHistogramSectorKey] = histogram[maxHistogramSectorKey] + 1
+			continue
+		}
+		k := strconv.Itoa(fibmap.Blks)
+		histogram[k] = histogram[k] + 1
 	}
 
 	response := &FileInfoResponse{

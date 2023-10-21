@@ -103,7 +103,7 @@ func (r *ListFilesResponse) Serialize() []byte {
 type FileInfoResponse struct {
 	FilePath       string         `json:"file_path"`
 	ZoneBitmaps    map[int][]byte `json:"zone_bitmaps"`
-	BlockHistogram map[int]int    `json:"block_histogram"`
+	BlockHistogram map[string]int `json:"block_histogram"`
 }
 
 func (r *FileInfoResponse) Serialize() []byte {
@@ -111,9 +111,9 @@ func (r *FileInfoResponse) Serialize() []byte {
 	for k, v := range r.ZoneBitmaps {
 		zoneBitmaps[int32(k)] = rle.Compress(v)
 	}
-	blockHistogram := make(map[int32]int32)
+	blockHistogram := make(map[string]int32)
 	for k, v := range r.BlockHistogram {
-		blockHistogram[int32(k)] = int32(v)
+		blockHistogram[k] = int32(v)
 	}
 	msg := protos.FileInfoResponse{
 		FilePath:       r.FilePath,
