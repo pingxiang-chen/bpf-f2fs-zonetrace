@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -292,6 +291,15 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 특정한 path 가 주어진경우
+	files, err := fstool.ListFiles(dirPath)
+	if err != nil {
+		http.Error(w, "Error listing files", http.StatusInternalServerError)
+		return
+	}
+
+	response := NewListFilesResponse()
+
 	mountPoint := ""
 	for _, mountPath := range mountInfo.MountPath {
 		if strings.HasPrefix(dirPath, mountPath) {
@@ -299,28 +307,15 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	if len(mountPoint) > 0 {
+		response.MountPoint = mountPoint
 
-	// 특정한 path 가 주어진경우
-	files, err := fstool.ListFiles(dirPath)
-	if err != nil {
-		http.Error(w, "Error listing files", http.StatusInternalServerError)
-		return
-	}
-	response := NewListFilesResponse()
-	response.MountPoint = mountPoint
-	relPath, err := filepath.Rel(mountPoint, dirPath)
-	if err != nil {
-		relPath = dirPath
-	}
-	fmt.Printf("dirPath: %s\n", dirPath)
-	fmt.Printf("relPath: %s\n", relPath)
-	response.CurrentDirs = strings.Split(relPath, "/")
-	if len(response.CurrentDirs) > 0 && response.CurrentDirs[0] == "." {
-		response.CurrentDirs[0] = mountPoint
+		currentDirs := []string{mountPoint}
+		currentDirs = append(currentDirs, strings.Split(dirPath[len(mountPoint)+1:], "/")...)
+		response.CurrentDirs = currentDirs
 	}
 
 	for _, file := range files {
-
 		response.Files = append(response.Files, ListFileItem{
 			FilePath: file.FilePath,
 			Name:     file.Name,
