@@ -312,10 +312,11 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		relPath = dirPath
 	}
-	if len(relPath) > 0 && relPath[0] == '.' {
-		relPath = mountPoint + relPath[1:]
-	}
 	response.CurrentDirs = strings.Split(relPath, "/")
+	if len(response.CurrentDirs) > 0 && response.CurrentDirs[0] == "." {
+		response.CurrentDirs[0] = mountPoint
+	}
+
 	for _, file := range files {
 
 		response.Files = append(response.Files, ListFileItem{
