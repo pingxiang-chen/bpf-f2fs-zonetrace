@@ -26,5 +26,5 @@ message ZoneResponse {
 message FileInfoResponse {
   string file_path = 1;
   map<int32, bytes> zone_bitmaps = 2;
-  map<int32, int32> block_histogram = 3;
+  map<string, int32> block_histogram = 3;
 }

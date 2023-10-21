@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
@@ -95,7 +96,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	}
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 
-	maxSectors := -1
+	maxSectors := math.MaxInt
 	maxSectorsPath := fmt.Sprintf("/sys/block/%s/queue/max_sectors_kb", deviceName)
 	f, err := os.Open(maxSectorsPath)
 	if err != nil {
@@ -112,8 +113,6 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 			maxSectors = maxSectorsKb * 1024
 		}
 	}
-
-	fmt.Printf("maxSectors: %d\n", maxSectors)
 
 	return &znsmemory.ZoneInfo{
 		RegularDeviceName:       mountPath,
