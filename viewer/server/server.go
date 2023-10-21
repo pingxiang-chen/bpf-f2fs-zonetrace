@@ -309,9 +309,12 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(mountPoint) > 0 {
 		response.MountPoint = mountPoint
-
 		currentDirs := []string{mountPoint}
-		currentDirs = append(currentDirs, strings.Split(dirPath[len(mountPoint)+1:], "/")...)
+		remainPath := dirPath[len(mountPoint):]
+		if len(remainPath) > 0 && remainPath[0] == '/' {
+			remainPath = remainPath[1:]
+		}
+		currentDirs = append(currentDirs, strings.Split(remainPath, "/")...)
 		response.CurrentDirs = currentDirs
 	}
 
