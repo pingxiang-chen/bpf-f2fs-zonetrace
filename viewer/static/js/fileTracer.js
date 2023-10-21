@@ -32,6 +32,27 @@ function addQueryParam(key, value) {
     window.history.pushState({path: url.href}, '', url.href);
 }
 
+/**
+ * Parses the current URL's query parameters and returns them as an object.
+ * Each key-value pair in the query parameters becomes a property in the resulting object.
+ *
+ * @returns {Object} An object representing the key-value pairs from the current URL's query parameters.
+ */
+function getQueryParams() {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Create an object to hold the query parameters
+    let queryParams = {};
+
+    // Iterate over the search parameters and add them to the object
+    for (let [key, value] of url.searchParams.entries()) {
+        queryParams[key] = value;
+    }
+
+    return queryParams;
+}
+
 
 function getIconType(pathType) {
     return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
@@ -174,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .node();
         let context = canvas.getContext("2d");
 
-        reDrawCanvas = async () => {
+        let reDrawCanvas = async () => {
             context.clearRect(0, 0, canvas.width, canvas.height);
             canvasRowSize = bitmapSize / zoomLevel;
             canvasColSize = maxSegmentNumber * zoomLevel;
@@ -339,12 +360,16 @@ document.addEventListener('DOMContentLoaded', function () {
             .on("mouseleave", mouseleave)
             .on("click", function (event, i) {
                 if (i === currentZoneId) {
-                    return
+                    return;
                 }
-                ctx.abort()
-                document.location.href = `/highlight/${i}`;
-            })
+                ctx.abort();
 
+                let queryParams = getQueryParams();
+                let newUrl = new URL(window.location.origin + `/highlight/${i}`);
+                Object.keys(queryParams).forEach(key => newUrl.searchParams.append(key, queryParams[key]));
+                alert(newUrl.href)
+                document.location.href = newUrl.href;
+            })
 
         // Add title to graph
         svg.append("text")
