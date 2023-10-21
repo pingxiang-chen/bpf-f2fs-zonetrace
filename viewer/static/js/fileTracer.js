@@ -382,7 +382,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 let queryParams = getQueryParams();
                 let newUrl = new URL(window.location.origin + `/highlight/${i}`);
                 Object.keys(queryParams).forEach(key => newUrl.searchParams.append(key, queryParams[key]));
-                alert(newUrl.href)
                 document.location.href = newUrl.href;
             })
 
