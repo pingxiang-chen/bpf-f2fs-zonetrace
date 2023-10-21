@@ -66,6 +66,7 @@ type ZoneInfo struct {
 	AvailableBlockPerZone   int
 	TotalSegmentPerZone     int
 	AvailableSegmentPerZone int
+	MaxSectors              int
 }
 
 type FileInfo struct {

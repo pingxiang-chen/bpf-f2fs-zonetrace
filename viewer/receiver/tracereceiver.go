@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
 )
@@ -93,6 +94,27 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 		return nil, fmt.Errorf("parseZoneInfo: %w (read: %s)", err, line)
 	}
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
+
+	maxSectors := -1
+	maxSectorsPath := fmt.Sprintf("/sys/block/%s/queue/max_sectors_kb", mountPath)
+	f, err := os.Open(maxSectorsPath)
+	if err != nil {
+		err = fmt.Errorf("failed to open %s: %w", maxSectorsPath, err)
+		fmt.Printf("%v\n", err)
+	} else {
+		defer f.Close()
+		var maxSectorsKb int
+		_, err = fmt.Fscanf(f, "%d", &maxSectorsKb)
+		if err != nil {
+			err = fmt.Errorf("failed to read max sectors from %s: %w", maxSectorsPath, err)
+			fmt.Printf("%v\n", err)
+		} else {
+			maxSectors = maxSectorsKb * 1024
+		}
+	}
+	
+	fmt.Printf("maxSectors: %d\n", maxSectors)
+
 	return &znsmemory.ZoneInfo{
 		RegularDeviceName:       mountPath,
 		ZNSDeviceName:           deviceName,
@@ -102,6 +124,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 		AvailableBlockPerZone:   zoneCapBlocks,
 		TotalSegmentPerZone:     zoneBlocks / SegmentSize,
 		AvailableSegmentPerZone: int(float32(zoneCapBlocks)/float32(SegmentSize) + 0.5),
+		MaxSectors:              maxSectors,
 	}, nil
 }
 
