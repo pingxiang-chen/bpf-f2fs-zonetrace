@@ -114,8 +114,6 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 		}
 	}
 
-	fmt.Printf("maxSectors: %d\n", maxSectors)
-
 	return &znsmemory.ZoneInfo{
 		RegularDeviceName:       mountPath,
 		ZNSDeviceName:           deviceName,
