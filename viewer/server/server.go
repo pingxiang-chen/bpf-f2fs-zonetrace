@@ -270,21 +270,20 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dirPath := query.Get("dirPath")
 	zoneInfo := s.znsMemory.GetZoneInfo()
+	mountInfo, err := fstool.GetMountInfo(zoneInfo.RegularDeviceName)
+	if err != nil {
+		http.Error(w, "Error getting mount info", http.StatusInternalServerError)
+		return
+	}
+
 	if dirPath == "" {
 		// path 가 빈 경우 root mount path 를 반환
-		mountInfo, err := fstool.GetMountInfo(zoneInfo.RegularDeviceName)
-		if err != nil {
-			http.Error(w, "Error getting mount info", http.StatusInternalServerError)
-			return
-		}
-		response := &ListFilesResponse{
-			Files: make([]fstool.FileInfo, 0),
-		}
+		response := NewListFilesResponse()
 		for _, mountPath := range mountInfo.MountPath {
-			response.Files = append(response.Files, fstool.FileInfo{
+			response.Files = append(response.Files, ListFileItem{
 				FilePath: mountPath,
 				Name:     mountPath,
-				Type:     fstool.RootPath,
+				Type:     int(fstool.RootPath),
 				SizeStr:  "",
 			})
 		}
@@ -298,9 +297,39 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error listing files", http.StatusInternalServerError)
 		return
 	}
-	response := &ListFilesResponse{
-		Files: files,
+
+	response := NewListFilesResponse()
+
+	mountPoint := ""
+	for _, mountPath := range mountInfo.MountPath {
+		if strings.HasPrefix(dirPath, mountPath) {
+			mountPoint = mountPath
+			break
+		}
 	}
+	if len(mountPoint) > 0 {
+		response.MountPoint = mountPoint
+		currentDirs := []string{mountPoint}
+		remainPath := dirPath[len(mountPoint):]
+		if len(remainPath) > 0 && remainPath[0] == '/' {
+			remainPath = remainPath[1:]
+		}
+		if len(remainPath) > 0 {
+			currentDirs = append(currentDirs, strings.Split(remainPath, "/")...)
+		}
+		response.CurrentDirs = currentDirs
+		response.ParentDirPath = strings.Join(currentDirs[:len(currentDirs)-1], "/")
+	}
+
+	for _, file := range files {
+		response.Files = append(response.Files, ListFileItem{
+			FilePath: file.FilePath,
+			Name:     file.Name,
+			Type:     int(file.Type),
+			SizeStr:  file.SizeStr,
+		})
+	}
+
 	WriteJsonResponse(w, response)
 	return
 }

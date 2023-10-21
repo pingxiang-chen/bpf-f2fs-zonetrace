@@ -12,6 +12,63 @@ const ICON_FILE = 'file outline'
 const ICON_DIRECTORY = 'folder'
 const ICON_HOME = 'home'
 
+
+/**
+ * Adds or updates a query parameter in the current URL without reloading the page.
+ * If the parameter already exists, it updates the value. Otherwise, it adds the parameter with the new value.
+ * The browser's address bar reflects the new URL.
+ *
+ * @param {string} key - The key of the query parameter to be added or updated.
+ * @param {string} value - The value for the associated key in the query parameter.
+ */
+function addQueryParam(key, value) {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Add or update the query parameter
+    url.searchParams.set(key, value);
+
+    // Update the browser's history state without reloading the page
+    window.history.pushState({path: url.href}, '', url.href);
+}
+
+/**
+ * Removes all query parameters from the current URL without reloading the page.
+ * The browser's address bar reflects the new URL, which will not contain any query parameters.
+ */
+function cleanQueryParams() {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Remove all query parameters
+    url.search = new URLSearchParams();
+
+    // Update the browser's history state without reloading the page
+    window.history.pushState({path: url.href}, '', url.href);
+}
+
+/**
+ * Parses the current URL's query parameters and returns them as an object.
+ * Each key-value pair in the query parameters becomes a property in the resulting object.
+ *
+ * @returns {Object} An object representing the key-value pairs from the current URL's query parameters.
+ */
+function getQueryParams() {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Create an object to hold the query parameters
+    let queryParams = {};
+
+    // Iterate over the search parameters and add them to the object
+    for (let [key, value] of url.searchParams.entries()) {
+        queryParams[key] = value;
+    }
+
+    return queryParams;
+}
+
+
 function getIconType(pathType) {
     return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
 }
@@ -153,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .node();
         let context = canvas.getContext("2d");
 
-        reDrawCanvas = async () => {
+        let reDrawCanvas = async () => {
             context.clearRect(0, 0, canvas.width, canvas.height);
             canvasRowSize = bitmapSize / zoomLevel;
             canvasColSize = maxSegmentNumber * zoomLevel;
@@ -318,12 +375,15 @@ document.addEventListener('DOMContentLoaded', function () {
             .on("mouseleave", mouseleave)
             .on("click", function (event, i) {
                 if (i === currentZoneId) {
-                    return
+                    return;
                 }
-                ctx.abort()
-                document.location.href = `/highlight/${i}`;
-            })
+                ctx.abort();
 
+                let queryParams = getQueryParams();
+                let newUrl = new URL(window.location.origin + `/highlight/${i}`);
+                Object.keys(queryParams).forEach(key => newUrl.searchParams.append(key, queryParams[key]));
+                document.location.href = newUrl.href;
+            })
 
         // Add title to graph
         svg.append("text")
@@ -377,8 +437,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.value))
                     .style("fill", "#69b3a2")
-                    // .attr("data-tooltip", d => d.value)
-                    // .attr("data-position", "top center");
+                // .attr("data-tooltip", d => d.value)
+                // .attr("data-position", "top center");
             }
         }
 
@@ -429,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        async function getFileInfo(filePath) {
+        async function selectFileInfo(filePath) {
             const root = await protobuf.load("/static/zns.proto");
             const FileInfoResponse = root.lookupType('FileInfoResponse');
             const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
@@ -474,13 +534,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 } else if (item.type === TYPE_HOME) {
-                    updateCurrentFileList(null);
+                    cleanQueryParams();
+                    updateCurrentFileList('');
                 } else if (item.type !== TYPE_FILE) {
+                    addQueryParam("path", item.path);
                     if (!item.children) {
-                        updateCurrentFileList(item);
+                        updateCurrentFileList(item.path);
                     }
                 } else if (item.type === TYPE_FILE) {
-                    getFileInfo(item.path)
+                    addQueryParam("filePath", item.path);
+                    selectFileInfo(item.path)
                 }
             }
 
@@ -525,14 +588,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        async function updateCurrentFileList(selectedItem) {
-            let nextDirPath = ''
-            const isHome = !selectedItem
-            if (selectedItem) {
-                nextDirPath = selectedItem.path;
-            }
-
-            const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
+        async function updateCurrentFileList(dirPath) {
+            const isHome = dirPath === '' || !dirPath;
+            const response = await fetch(`/api/files?dirPath=${dirPath}`);
             const data = await response.json()
             const files = data['files'];
             const newFileSystem = [];
@@ -542,34 +600,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: '',
                 size: '',
                 path: '',
-                parent: null,
             };
             newFileSystem.push(root);
 
-            if (!isHome && selectedItem && selectedItem.parent) {
-                const parent = selectedItem.parent;
-                newFileSystem.push({
-                    type: parent['type'],
-                    iconType: ICON_PARENT,
-                    name: '..',
-                    size: parent['size'],
-                    path: parent['path'],
-                    parent: parent.parent || null,
-                });
+            if (!isHome) {
+                if (data.current_dirs.length === 0) {
+                    // parent is home
+                    newFileSystem.push({
+                        type: TYPE_HOME,
+                        iconType: ICON_PARENT,
+                        name: '..',
+                        size: '',
+                        path: '',
+                    });
+                } else {
+                    // parent is previous directory
+                    newFileSystem.push({
+                        type: TYPE_PARENT,
+                        iconType: ICON_PARENT,
+                        name: '..',
+                        size: '',
+                        path: data.parent_dir_path,
+                    });
+                }
             }
 
             for (const fileInfo of files) {
-                let parent = selectedItem;
-                if (!parent) {
-                    parent = root;
-                }
                 newFileSystem.push({
                     iconType: getIconType(fileInfo['type']),
                     type: fileInfo['type'],
                     name: fileInfo['name'],
                     size: fileInfo['size_str'],
                     path: fileInfo['file_path'],
-                    parent: parent,
                 });
             }
             // 파일 시스템 채우기
@@ -622,10 +684,21 @@ document.addEventListener('DOMContentLoaded', function () {
             return divisors;
         }
 
+        function makeItemFromCurrentQueryParams() {
+            const params = getQueryParams()
+        }
+
 
         drawZone();
-        updateCurrentFileList(null);
         drawHistogram(null);
+
+        const params = getQueryParams();
+        const curPath = params['path'] || ""
+        const curFile = params['filePath'] || ""
+        updateCurrentFileList(curPath);
+        if (curFile) {
+            selectFileInfo(curFile)
+        }
 
         /* ---------- end of main ---------- */
     }
