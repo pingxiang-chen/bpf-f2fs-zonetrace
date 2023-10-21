@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        async function getFileInfo(filePath) {
+        async function selectFileInfo(filePath) {
             const root = await protobuf.load("/static/zns.proto");
             const FileInfoResponse = root.lookupType('FileInfoResponse');
             const response = await fetch(`/api/fileInfo?filePath=${filePath}`);
@@ -544,8 +544,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         updateCurrentFileList(item.path);
                     }
                 } else if (item.type === TYPE_FILE) {
-                    addQueryParam("file", item.path);
-                    getFileInfo(item.path)
+                    addQueryParam("filePath", item.path);
+                    selectFileInfo(item.path)
                 }
             }
 
@@ -692,9 +692,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         drawZone();
-        console.log()
-        updateCurrentFileList('');
         drawHistogram(null);
+
+        const params = getQueryParams();
+        const curPath = params['path'] || ""
+        const curFile = params['filePath'] || ""
+        updateCurrentFileList(curPath);
+        if (curFile) {
+            selectFileInfo(curFile)
+        }
 
         /* ---------- end of main ---------- */
     }
