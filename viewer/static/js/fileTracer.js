@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // clear the existing svg if any
             d3.select("#histogram").select("svg").remove();
 
-            const margin = {top: 10, right: 30, bottom: 30, left: 40},
+            const margin = {top: 10, right: 30, bottom: 50, left: 40}, // Adjust bottom margin to give space for the new label
                 width = 460 - margin.left - margin.right,
                 height = 400 - margin.top - margin.bottom;
 
@@ -416,7 +416,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 .padding(0.1);
             histogram.append("g")
                 .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x))
+                .append("text") // Append a text element to the x-axis
+                .attr("class", "x-axis-label") // Assign a class for potential styling
+                .attr("x", width / 2) // Position the text in the middle of the x-axis
+                .attr("y", 30) // Position the text slightly below the x-axis
+                .attr("fill", "black") // Choose a fill color for the text
+                .attr("text-anchor", "middle") // Center the text
+                .text("# of blocks"); // Specify the text for the label
 
             const y = d3.scaleLinear()
                 .domain([0, data !== null ? d3.max(Object.values(data)) : 0])
@@ -436,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .attr("y", d => y(d.value))
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.value))
-                    .style("fill", "#69b3a2")
+                    .style("fill", "#69b3a2");
                 // .attr("data-tooltip", d => d.value)
                 // .attr("data-position", "top center");
             }
