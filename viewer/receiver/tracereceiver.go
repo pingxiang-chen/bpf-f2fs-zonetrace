@@ -96,7 +96,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 	zoneCapBlocks := zoneBlocks // TODO: get real zoneCapBlocks someday
 
 	maxSectors := -1
-	maxSectorsPath := fmt.Sprintf("/sys/block/%s/queue/max_sectors_kb", mountPath)
+	maxSectorsPath := fmt.Sprintf("/sys/block/%s/queue/max_sectors_kb", deviceName)
 	f, err := os.Open(maxSectorsPath)
 	if err != nil {
 		err = fmt.Errorf("failed to open %s: %w", maxSectorsPath, err)
@@ -112,7 +112,7 @@ func ReadZoneInfo(r *bufio.Reader) (*znsmemory.ZoneInfo, error) {
 			maxSectors = maxSectorsKb * 1024
 		}
 	}
-	
+
 	fmt.Printf("maxSectors: %d\n", maxSectors)
 
 	return &znsmemory.ZoneInfo{
