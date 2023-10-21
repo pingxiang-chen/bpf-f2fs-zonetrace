@@ -72,22 +72,23 @@ type zoneNoSegmentTypePair struct {
 }
 
 type ListFilesResponse struct {
-	MountPoint string         `json:"mount_point"`
-	Files      []ListFileItem `json:"files"`
+	MountPoint  string         `json:"mount_point"`
+	CurrentDirs []string       `json:"current_dirs"`
+	Files       []ListFileItem `json:"files"`
 }
 
 func NewListFilesResponse() *ListFilesResponse {
 	return &ListFilesResponse{
-		Files: make([]ListFileItem, 0),
+		CurrentDirs: make([]string, 0),
+		Files:       make([]ListFileItem, 0),
 	}
 }
 
 type ListFileItem struct {
-	ParentPath string `json:"parent_path"`
-	FilePath   string `json:"file_path"`
-	Name       string `json:"name"`
-	Type       int    `json:"type"`
-	SizeStr    string `json:"size_str"`
+	FilePath string `json:"file_path"`
+	Name     string `json:"name"`
+	Type     int    `json:"type"`
+	SizeStr  string `json:"size_str"`
 }
 
 func (r *ListFilesResponse) Serialize() []byte {

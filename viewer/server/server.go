@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -281,11 +282,10 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		response := NewListFilesResponse()
 		for _, mountPath := range mountInfo.MountPath {
 			response.Files = append(response.Files, ListFileItem{
-				ParentPath: "",
-				FilePath:   mountPath,
-				Name:       mountPath,
-				Type:       int(fstool.RootPath),
-				SizeStr:    "",
+				FilePath: mountPath,
+				Name:     mountPath,
+				Type:     int(fstool.RootPath),
+				SizeStr:  "",
 			})
 		}
 		WriteJsonResponse(w, response)
@@ -308,13 +308,19 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	response := NewListFilesResponse()
 	response.MountPoint = mountPoint
+	relPath, err := filepath.Rel(mountPoint, dirPath)
+	if err != nil {
+		relPath = dirPath
+	}
+	response.CurrentDirs = strings.Split(relPath, "/")
+	
 	for _, file := range files {
+
 		response.Files = append(response.Files, ListFileItem{
-			ParentPath: dirPath,
-			FilePath:   file.FilePath,
-			Name:       file.Name,
-			Type:       int(file.Type),
-			SizeStr:    file.SizeStr,
+			FilePath: file.FilePath,
+			Name:     file.Name,
+			Type:     int(file.Type),
+			SizeStr:  file.SizeStr,
 		})
 	}
 

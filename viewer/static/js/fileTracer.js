@@ -671,9 +671,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return divisors;
         }
 
+        function makeItemFromCurrentQueryParams(){
+            const params = getQueryParams()
+        }
+
 
         drawZone();
-        console.log(getQueryParams())
+        console.log()
         updateCurrentFileList(null);
         drawHistogram(null);
 
