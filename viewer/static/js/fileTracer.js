@@ -601,13 +601,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 } else {
                     // parent is previous directory
-                    const parentPath = data.current_dirs[data.current_dirs.length - 1];
                     newFileSystem.push({
                         type: TYPE_PARENT,
                         iconType: ICON_PARENT,
                         name: '..',
                         size: '',
-                        path: parentPath,
+                        path: dirPath,
                     });
                 }
             }
