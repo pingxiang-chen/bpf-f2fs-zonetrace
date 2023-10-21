@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (item.type === 'folder') {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
-                } else if (item.type === TYPE_HOME) {
+                } else if (item.type === TYPE_HOME || item.type === TYPE_ROOT) {
                     cleanQueryParams();
                     updateCurrentFileList('');
                 } else if (item.type !== TYPE_FILE) {
