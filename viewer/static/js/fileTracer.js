@@ -524,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (item.type !== TYPE_FILE) {
                     addQueryParam("path", item.path);
                     if (!item.children) {
+                        console.log('updateCurrentFileList', item)
                         updateCurrentFileList(item);
                     }
                 } else if (item.type === TYPE_FILE) {
@@ -672,6 +673,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         drawZone();
+        console.log(getQueryParams())
         updateCurrentFileList(null);
         drawHistogram(null);
 
