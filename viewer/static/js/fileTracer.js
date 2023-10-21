@@ -520,12 +520,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
                 } else if (item.type === TYPE_HOME) {
-                    updateCurrentFileList(null);
+                    updateCurrentFileList('');
                 } else if (item.type !== TYPE_FILE) {
                     addQueryParam("path", item.path);
                     if (!item.children) {
                         console.log('updateCurrentFileList', item)
-                        updateCurrentFileList(item);
+                        updateCurrentFileList(item.path);
                     }
                 } else if (item.type === TYPE_FILE) {
                     addQueryParam("file", item.path);
@@ -574,14 +574,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        async function updateCurrentFileList(selectedItem) {
-            let nextDirPath = ''
-            const isHome = !selectedItem
-            if (selectedItem) {
-                nextDirPath = selectedItem.path;
-            }
-
-            const response = await fetch(`/api/files?dirPath=${nextDirPath}`);
+        async function updateCurrentFileList(dirPath) {
+            const isHome = dirPath === '' || !dirPath;
+            const response = await fetch(`/api/files?dirPath=${dirPath}`);
             const data = await response.json()
             const files = data['files'];
             const newFileSystem = [];
@@ -591,7 +586,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: '',
                 size: '',
                 path: '',
-                parent: null,
             };
             newFileSystem.push(root);
 
@@ -604,7 +598,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         name: '..',
                         size: '',
                         path: '',
-                        parent: null,
                     });
                 } else {
                     // parent is previous directory
@@ -615,23 +608,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         name: '..',
                         size: '',
                         path: parentPath,
-                        parent: null,
                     });
                 }
             }
 
             for (const fileInfo of files) {
-                let parent = selectedItem;
-                if (!parent) {
-                    parent = root;
-                }
                 newFileSystem.push({
                     iconType: getIconType(fileInfo['type']),
                     type: fileInfo['type'],
                     name: fileInfo['name'],
                     size: fileInfo['size_str'],
                     path: fileInfo['file_path'],
-                    parent: parent,
                 });
             }
             // 파일 시스템 채우기
@@ -691,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         drawZone();
         console.log()
-        updateCurrentFileList(null);
+        updateCurrentFileList('');
         drawHistogram(null);
 
         /* ---------- end of main ---------- */
