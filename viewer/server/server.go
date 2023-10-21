@@ -375,7 +375,7 @@ func (s *api) getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	maxHistogramSector := znsInfo.MaxSectors / 4096
-	maxHistogramSectorKey := fmt.Sprintf("<%d", maxHistogramSector)
+	maxHistogramSectorKey := fmt.Sprintf("> %d", maxHistogramSector)
 	histogram := make(map[string]int)
 	maxKey := 0
 	for _, fibmap := range fileInfo.Fibmaps {
