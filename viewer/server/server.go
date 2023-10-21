@@ -270,26 +270,34 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dirPath := query.Get("dirPath")
 	zoneInfo := s.znsMemory.GetZoneInfo()
+	mountInfo, err := fstool.GetMountInfo(zoneInfo.RegularDeviceName)
+	if err != nil {
+		http.Error(w, "Error getting mount info", http.StatusInternalServerError)
+		return
+	}
+
 	if dirPath == "" {
 		// path 가 빈 경우 root mount path 를 반환
-		mountInfo, err := fstool.GetMountInfo(zoneInfo.RegularDeviceName)
-		if err != nil {
-			http.Error(w, "Error getting mount info", http.StatusInternalServerError)
-			return
-		}
-		response := &ListFilesResponse{
-			Files: make([]fstool.FileInfo, 0),
-		}
+		response := NewListFilesResponse()
 		for _, mountPath := range mountInfo.MountPath {
-			response.Files = append(response.Files, fstool.FileInfo{
+			response.Files = append(response.Files, ListFileItem{
+				Parent:   "",
 				FilePath: mountPath,
 				Name:     mountPath,
-				Type:     fstool.RootPath,
+				Type:     int(fstool.RootPath),
 				SizeStr:  "",
 			})
 		}
 		WriteJsonResponse(w, response)
 		return
+	}
+
+	mountPoint := ""
+	for _, mountPath := range mountInfo.MountPath {
+		if strings.HasPrefix(dirPath, mountPath) {
+			mountPoint = mountPath
+			break
+		}
 	}
 
 	// 특정한 path 가 주어진경우
@@ -298,9 +306,18 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error listing files", http.StatusInternalServerError)
 		return
 	}
-	response := &ListFilesResponse{
-		Files: files,
+	response := NewListFilesResponse()
+	response.MountPoint = mountPoint
+	for _, file := range files {
+		response.Files = append(response.Files, ListFileItem{
+			Parent:   dirPath,
+			FilePath: file.FilePath,
+			Name:     file.Name,
+			Type:     int(file.Type),
+			SizeStr:  file.SizeStr,
+		})
 	}
+
 	WriteJsonResponse(w, response)
 	return
 }

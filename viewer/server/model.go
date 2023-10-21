@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/encoding/protodelim"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/fstool"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/protos"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/rle"
 	"github.com/pingxiang-chen/bpf-f2fs-zonetrace/viewer/znsmemory"
@@ -73,7 +72,22 @@ type zoneNoSegmentTypePair struct {
 }
 
 type ListFilesResponse struct {
-	Files []fstool.FileInfo `json:"files"`
+	MountPoint string         `json:"mount_point"`
+	Files      []ListFileItem `json:"files"`
+}
+
+func NewListFilesResponse() *ListFilesResponse {
+	return &ListFilesResponse{
+		Files: make([]ListFileItem, 0),
+	}
+}
+
+type ListFileItem struct {
+	Parent   string `json:"parent"`
+	FilePath string `json:"file_path"`
+	Name     string `json:"name"`
+	Type     int    `json:"type"`
+	SizeStr  string `json:"size_str"`
 }
 
 func (r *ListFilesResponse) Serialize() []byte {
