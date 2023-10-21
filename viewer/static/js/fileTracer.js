@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (item.type === 'folder') {
                     const list = d3.select(this.parentNode).select('.list');
                     list.style('display', list.style('display') === 'none' ? 'block' : 'none');
-                } else if (item.type === TYPE_HOME || item.type === TYPE_ROOT) {
+                } else if (item.type === TYPE_HOME) {
                     cleanQueryParams();
                     updateCurrentFileList('');
                 } else if (item.type !== TYPE_FILE) {
@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.current_dirs.length === 0) {
                     // parent is home
                     newFileSystem.push({
-                        type: TYPE_ROOT,
+                        type: TYPE_HOME,
                         iconType: ICON_PARENT,
                         name: '..',
                         size: '',
