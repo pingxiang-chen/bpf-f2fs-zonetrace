@@ -312,6 +312,8 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		relPath = dirPath
 	}
+	fmt.Printf("dirPath: %s\n", dirPath)
+	fmt.Printf("relPath: %s\n", relPath)
 	response.CurrentDirs = strings.Split(relPath, "/")
 	if len(response.CurrentDirs) > 0 && response.CurrentDirs[0] == "." {
 		response.CurrentDirs[0] = mountPoint
