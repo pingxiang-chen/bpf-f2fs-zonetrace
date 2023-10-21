@@ -318,6 +318,7 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			currentDirs = append(currentDirs, strings.Split(remainPath, "/")...)
 		}
 		response.CurrentDirs = currentDirs
+		response.ParentDirPath = strings.Join(currentDirs[:len(currentDirs)-1], "/")
 	}
 
 	for _, file := range files {

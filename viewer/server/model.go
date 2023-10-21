@@ -72,9 +72,10 @@ type zoneNoSegmentTypePair struct {
 }
 
 type ListFilesResponse struct {
-	MountPoint  string         `json:"mount_point"`
-	CurrentDirs []string       `json:"current_dirs"`
-	Files       []ListFileItem `json:"files"`
+	MountPoint    string         `json:"mount_point"`
+	CurrentDirs   []string       `json:"current_dirs"`
+	ParentDirPath string         `json:"parent_dir_path"`
+	Files         []ListFileItem `json:"files"`
 }
 
 func NewListFilesResponse() *ListFilesResponse {
