@@ -12,6 +12,27 @@ const ICON_FILE = 'file outline'
 const ICON_DIRECTORY = 'folder'
 const ICON_HOME = 'home'
 
+
+/**
+ * Adds or updates a query parameter in the current URL without reloading the page.
+ * If the parameter already exists, it updates the value. Otherwise, it adds the parameter with the new value.
+ * The browser's address bar reflects the new URL.
+ *
+ * @param {string} key - The key of the query parameter to be added or updated.
+ * @param {string} value - The value for the associated key in the query parameter.
+ */
+function addQueryParam(key, value) {
+    // Parse the current URL
+    let url = new URL(window.location.href);
+
+    // Add or update the query parameter
+    url.searchParams.set(key, value);
+
+    // Update the browser's history state without reloading the page
+    window.history.pushState({path: url.href}, '', url.href);
+}
+
+
 function getIconType(pathType) {
     return [ICON_UNKNOWN, ICON_ROOT, ICON_PARENT, ICON_FILE, ICON_DIRECTORY, ICON_HOME][pathType]
 }
@@ -377,8 +398,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.value))
                     .style("fill", "#69b3a2")
-                    // .attr("data-tooltip", d => d.value)
-                    // .attr("data-position", "top center");
+                // .attr("data-tooltip", d => d.value)
+                // .attr("data-position", "top center");
             }
         }
 
@@ -476,10 +497,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (item.type === TYPE_HOME) {
                     updateCurrentFileList(null);
                 } else if (item.type !== TYPE_FILE) {
+                    addQueryParam("path", item.path);
                     if (!item.children) {
                         updateCurrentFileList(item);
                     }
                 } else if (item.type === TYPE_FILE) {
+                    addQueryParam("file", item.path);
                     getFileInfo(item.path)
                 }
             }
