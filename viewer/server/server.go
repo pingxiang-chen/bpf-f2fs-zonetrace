@@ -281,11 +281,11 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		response := NewListFilesResponse()
 		for _, mountPath := range mountInfo.MountPath {
 			response.Files = append(response.Files, ListFileItem{
-				Parent:   "",
-				FilePath: mountPath,
-				Name:     mountPath,
-				Type:     int(fstool.RootPath),
-				SizeStr:  "",
+				ParentPath: "",
+				FilePath:   mountPath,
+				Name:       mountPath,
+				Type:       int(fstool.RootPath),
+				SizeStr:    "",
 			})
 		}
 		WriteJsonResponse(w, response)
@@ -310,11 +310,11 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 	response.MountPoint = mountPoint
 	for _, file := range files {
 		response.Files = append(response.Files, ListFileItem{
-			Parent:   dirPath,
-			FilePath: file.FilePath,
-			Name:     file.Name,
-			Type:     int(file.Type),
-			SizeStr:  file.SizeStr,
+			ParentPath: dirPath,
+			FilePath:   file.FilePath,
+			Name:       file.Name,
+			Type:       int(file.Type),
+			SizeStr:    file.SizeStr,
 		})
 	}
 

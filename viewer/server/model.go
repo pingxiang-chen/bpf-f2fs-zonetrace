@@ -83,11 +83,11 @@ func NewListFilesResponse() *ListFilesResponse {
 }
 
 type ListFileItem struct {
-	Parent   string `json:"parent"`
-	FilePath string `json:"file_path"`
-	Name     string `json:"name"`
-	Type     int    `json:"type"`
-	SizeStr  string `json:"size_str"`
+	ParentPath string `json:"parent_path"`
+	FilePath   string `json:"file_path"`
+	Name       string `json:"name"`
+	Type       int    `json:"type"`
+	SizeStr    string `json:"size_str"`
 }
 
 func (r *ListFilesResponse) Serialize() []byte {
