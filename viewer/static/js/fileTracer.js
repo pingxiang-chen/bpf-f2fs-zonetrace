@@ -539,7 +539,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (item.type !== TYPE_FILE) {
                     addQueryParam("path", item.path);
                     if (!item.children) {
-                        console.log('updateCurrentFileList', item)
                         updateCurrentFileList(item.path);
                     }
                 } else if (item.type === TYPE_FILE) {
