@@ -314,7 +314,9 @@ func (s *api) listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		if len(remainPath) > 0 && remainPath[0] == '/' {
 			remainPath = remainPath[1:]
 		}
-		currentDirs = append(currentDirs, strings.Split(remainPath, "/")...)
+		if len(remainPath) > 0 {
+			currentDirs = append(currentDirs, strings.Split(remainPath, "/")...)
+		}
 		response.CurrentDirs = currentDirs
 	}
 
