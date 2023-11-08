@@ -80,6 +80,10 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     
     http://localhost:9090
 
+    The file mapping view can be opened with following url:
+    
+    http://localhost:9090/highlight/0
+
 6. Do some operations on the F2FS filesystem mount point.
 
     You can do some operations on the F2FS filesystem. For example, you can use our pre-defined fio jobfile.
@@ -91,8 +95,12 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
 
     Then you can see the trace data in the viewer.
 
+    Segment usage view:
+
     ![viewer](./assets/viewer.png)
 
+    File mapping view:
+    ![viewer](./assets/file-mapping.png)
 
 # How to Build
 
