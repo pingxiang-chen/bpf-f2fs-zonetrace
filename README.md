@@ -102,6 +102,12 @@ ZoneTrace is an eBPF-based program that can visualize the space management of ea
     File mapping view:
     ![viewer](./assets/file-mapping.png)
 
+7. We provide users with scritpts to manipluate the file layout on F2FS with ZNS SSDs, the scripts are under exploration folder, file_size is in MB, fragsize and fragdistance is in KB
+
+```bash
+    cd $HOME/bpf-f2fs-zonetrace/exploration
+    sudo ./generate_once [file_size] [fragsize]  [fragdistance] [result_path]
+```
 # How to Build
 
 ## Custom FEMU Image
@@ -154,7 +160,7 @@ Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/ping
         make -j
     ```
 
-8. Build the viewer with Golang(>=1.16)
+3. Build the viewer with Golang(>=1.16)
 
     Follow the Golang installation guide [here](https://golang.org/doc/install).
 
