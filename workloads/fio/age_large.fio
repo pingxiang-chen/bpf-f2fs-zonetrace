@@ -1,10 +1,10 @@
 [global]
 group_reporting
-filesize=10m
+filesize=600m
 sync=1
 
 [test1]
 filename=/mnt/f2fs/test.0.0
 rw=randwrite
-io_size=10m
-bssplit=4k/10:64k/40:128k/50
+io_size=600m
+bssplit=4k/10:16k/10:64k/40:256k/40

@@ -2,14 +2,20 @@
 MOUNT_POINT=/mnt/f2fs
 REGULAR_DEVICE=nvme4n1p1
 
+if [ $(basename $PWD) != "exploration" ]
+then
+    echo "Please go to exploration folder and execute the script"
+    exit -1
+fi
+
 if [ "$#" -ne 4 ]; then
     echo "Usage: ./generate_once [file_size] [fragsize] [fragdistance] [result_path]"
 	exit
 fi
 
 size=$1
-result_path=$4
-
+result_path="results/$4"
+[ ! -d results ] && mkdir results
 [ ! -d $result_path ] && mkdir $result_path
 
 let req_size=$size*1024
@@ -51,7 +57,7 @@ do
         val=$(./read_seq $MOUNT_POINT/target_file.png $req_size | awk '{print $3}')
         printf "Throughput = %f\n" $val > $result_path/${frag_size}_${frag_distance}.result > $result_path/${frag_size}_${frag_distance}.result
         echo "frag_size = $frag_size" >> $result_path/${frag_size}_${frag_distance}.result
-        ../../fiemap/fiemap $MOUNT_POINT/target_file.png >> $result_path/${frag_size}_${frag_distance}.result
+        ../f2fs-tools/tools/fibmap.f2fs $MOUNT_POINT/target_file.png >> $result_path/${frag_size}_${frag_distance}.result
         sleep 1
     done
 done

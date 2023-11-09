@@ -1,0 +1,17 @@
+[global]
+group_reporting
+filesize=10m
+randseed=1
+sync=1
+
+[test1]
+filename=/mnt/f2fs/1.png
+rw=randwrite
+io_size=10m
+bssplit=256k/50:512k/50
+
+[test2]
+filename=/mnt/f2fs/2.png
+rw=randwrite
+io_size=10m
+bssplit=256k/100
