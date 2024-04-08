@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ZNS_SSD=/dev/nvme3
+ZNS_SSD=/dev/nvme0
 
 SECTOR_SIZE=4096	# bytes
 ZONE_SIZE=524288	# sectors (4KiB)

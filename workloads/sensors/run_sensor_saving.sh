@@ -7,13 +7,13 @@ let GB=1024*1024*1024
 let MB=1024*1024
 let KB=1024
 
-let num_of_blks=50*$MB/128/$KB
-let counts=$NUM_OF_SENSOR
-
 if [ "$#" -ne 1 ]; then
     echo "Usage: ./run_sensors_saving.sh [num_of_streams]"
 	exit
 fi
+
+let num_of_blks=50*$MB/128/$KB
+let counts=$NUM_OF_SENSOR
 
 while (( --counts >= 0 )); do
 	dd if=/dev/random of=$MOUNT_POINT/target_file_$counts.mov count=$num_of_blks bs=128K oflag=sync,append,nocache conv=notrunc &
