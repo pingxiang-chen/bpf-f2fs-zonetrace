@@ -114,6 +114,9 @@ If you use this work, please cite our paper published in ACM Transactions on Des
     cd $HOME/bpf-f2fs-zonetrace/exploration
     sudo ./generate_once [file_size] [fragsize]  [fragdistance] [result_path]
 ```
+
+8. The sensor saving emulation scripts for autonomous systems is under folder `workloads/sensors`
+
 # How to Build
 
 ## Custom FEMU Image
