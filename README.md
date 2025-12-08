@@ -29,7 +29,7 @@ If you use this work, please cite our paper published in ACM Transactions on Des
 
 1. Prepare the FEMU environment
 
-    We provide a pre-built Ubuntu 24.04 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EVQFy5GSVUlBqdWkjHqbMtgBsgMzeeXLTBZI90MUQ0yRog?e=n2cFc5).
+    We provide a pre-built Ubuntu 24.04 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EVQFy5GSVUlBqdWkjHqbMtgBl-Fc739F0cwcSwJ9NHRSdg).
 
     and then put the image into the `$HOME/images`.
 
