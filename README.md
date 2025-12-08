@@ -29,13 +29,13 @@ If you use this work, please cite our paper published in ACM Transactions on Des
 
 1. Prepare the FEMU environment
 
-    We provide a pre-built Debian 12 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EV9ile8hYgZGoCpJ9mVJH7QBHtV4PdYDaK0K8bgKQGmONA?e=Jzjduv).
+    We provide a pre-built Ubuntu 24.04 qcow2 image for FEMU. You can download it from [here](https://personalmicrosoftsoftware-my.sharepoint.com/:u:/g/personal/pingxiac_personalmicrosoftsoftware_uci_edu/EVQFy5GSVUlBqdWkjHqbMtgBsgMzeeXLTBZI90MUQ0yRog?e=n2cFc5).
 
     and then put the image into the `$HOME/images`.
 
     ```bash
         mkdir -p $HOME/images
-        mv debian.qcow2 $HOME/images
+        mv femu.qcow2 $HOME/images
     ```
 
 2. Run script `./run_femu.sh` to build and run FEMU.
@@ -51,7 +51,7 @@ If you use this work, please cite our paper published in ACM Transactions on Des
         ssh -p 8080 femu@localhost
     ```
 
-   > ⚠️ All quickstart guide below assumes that you are in the FEMU environment with our pre-built Debian 12 image. If you use your own VM image, you need to install the dependencies and build the tools on your own. See [How to Build](#how-to-build) for more details.
+   > ⚠️ All quickstart guide below assumes that you are in the FEMU environment with our pre-built Ubuntu 24.04 image. If you use your own VM image, you need to install the dependencies and build the tools on your own. See [How to Build](#how-to-build) for more details.
 
 3. Clone the repo in FEMU
 
@@ -108,7 +108,7 @@ If you use this work, please cite our paper published in ACM Transactions on Des
     File mapping view:
     ![viewer](./assets/file-mapping.png)
 
-7. We provide users with scritpts to manipluate the file layout on F2FS with ZNS SSDs, the scripts are under exploration folder, file_size is in MB, fragsize and fragdistance is in KB
+7. We provide users with scripts to manipluate the file layout on F2FS with ZNS SSDs, the scripts are under exploration folder, file_size is in MB, fragsize and fragdistance is in KB
 
 ```bash
     cd $HOME/bpf-f2fs-zonetrace/exploration
@@ -159,7 +159,7 @@ Follow the [bpf-f2fs-zonetrace/bpftool/libbpf/README.md](https://github.com/ping
 
     ```bash
         cd $HOME/bpf-f2fs-zonetrace/bpftool
-        bpftool btf dump file /sys/kernel/btf/f2fs format c > $(HOME)/bpf-f2fs-zonetrace/src/bpf/f2fs.h
+        bpftool btf dump file /sys/kernel/btf/f2fs format c > $HOME/bpf-f2fs-zonetrace/src/bpf/f2fs.h
     ```
 
 2. Build the tracer

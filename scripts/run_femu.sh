@@ -2,7 +2,7 @@
 set -e
 
 IMAGE_DIR=$HOME/images      # FEMU Image directory
-IMAGE_FILE=debian.qcow2     # Virtual machine disk image
+IMAGE_FILE=femu.qcow2     # Virtual machine disk image
 
 # 1. Set directory to the root of the repository
 ROOT=$(pwd)
